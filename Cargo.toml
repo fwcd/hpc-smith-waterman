@@ -1,0 +1,6 @@
+[package]
+name = "hpc-smith-waterman"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
