@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+cd "$(dirname $0)/.."
+
+mkdir -p data
+cd data
+
+echo "==> Downloading UniProtKB/Swiss-Prot dataset..."
+name=uniprot_sprot.fasta.gz
+curl -o $name.download https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/$name
+mv $name.download $name
+gzip -d $name
