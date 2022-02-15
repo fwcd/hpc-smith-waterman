@@ -24,7 +24,7 @@ jobs:
         args: --release --all-features
     - name: Fetch OS info
       id: fetch-os-info
-      run:
+      run: |
         suffix=$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
         echo "Using suffix $suffix"
         echo "::set-output name=suffix::$suffix"
