@@ -26,6 +26,7 @@ jobs:
       id: fetch-os-info
       run:
         suffix=$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
+        echo "Using suffix $suffix"
         echo "::set-output name=suffix::$suffix"
     - name: Upload binaries
       uses: actions/upload-artifact@v2
