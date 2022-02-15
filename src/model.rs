@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// A (named) nucleid sequence.
 pub struct Sequence {
     pub name: String,
@@ -19,6 +21,12 @@ pub struct AlignedPair {
 impl Sequence {
     pub fn new(name: &str, raw: Vec<u8>) -> Self {
         Self { name: name.to_owned(), raw }
+    }
+}
+
+impl fmt::Display for Sequence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", String::from_utf8(self.raw.clone()).unwrap())
     }
 }
 

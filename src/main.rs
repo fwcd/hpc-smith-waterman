@@ -10,6 +10,6 @@ fn main() {
     let reader = FastaReader::new(BufReader::new(file));
 
     for seq in reader {
-        println!("Got {} with {:?}", seq.name, seq.raw);
+        println!("Got {} of length {}", seq.name, seq.raw.len());
     }
 }
