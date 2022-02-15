@@ -4,18 +4,31 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          artifact_name: hpc-smith-waterman
 
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - name: Set up toolchain
+      uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
-    - uses: actions-rs/cargo@v1
+    - name: Build project
+      uses: actions-rs/cargo@v1
       with:
         command: build
         args: --release --all-features
-    - uses: actions/upload-artifact@v2
+    - name: Fetch OS info
+      id: fetch-os-info
+      run:
+        suffix=$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
+        echo "::set-output name=suffix::$suffix"
+    - name: Upload binaries
+      uses: actions/upload-artifact@v2
       with:
-        name: hpc-smith-waterman
-        path: target/release/hpc-smith-waterman
+        name: ${{ matrix.artifact_name }}-${{ steps.fetch-os-info.outputs.suffix }}
+        path: target/release/${{ matrix.artifact_name }}
