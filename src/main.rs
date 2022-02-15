@@ -2,6 +2,8 @@ use std::{io::BufReader, fs::File};
 
 use fasta::FastaReader;
 
+use crate::model::{AlignedSequence, Sequence};
+
 mod fasta;
 mod model;
 

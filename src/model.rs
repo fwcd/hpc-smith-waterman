@@ -24,12 +24,6 @@ impl Sequence {
     }
 }
 
-impl fmt::Display for Sequence {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", String::from_utf8(self.raw.clone()).unwrap())
-    }
-}
-
 impl AlignedSequence {
     pub fn new(sequence: Sequence, indices: Vec<usize>) -> Self {
         Self { sequence, indices }
@@ -39,5 +33,27 @@ impl AlignedSequence {
 impl AlignedPair {
     pub fn new(left: AlignedSequence, right: AlignedSequence) -> Self {
         Self { left, right }
+    }
+}
+
+impl fmt::Display for Sequence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", String::from_utf8(self.raw.clone()).unwrap())
+    }
+}
+
+impl fmt::Display for AlignedSequence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut last: Option<usize> = None;
+        for &i in &self.indices {
+            let c = self.sequence.raw[i] as char;
+            if last == Some(i) {
+                write!(f, "-")?;
+            } else {
+                write!(f, "{}", c)?;
+            }
+            last = Some(i);
+        }
+        Ok(())
     }
 }
