@@ -5,3 +5,9 @@ edition = "2021"
 
 [dependencies]
 rayon = "1.5"
+
+# We include debug symbols in release builds for profiling
+[profile.release]
+opt-level = 3
+lto = true
+debug = true

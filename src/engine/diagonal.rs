@@ -52,33 +52,38 @@ impl Engine for DiagonalEngine {
         // each element in the diagonal.
 
         for k in 2..=(n + m) {
-            (1..k).into_par_iter().for_each(|j| {
+            // The lower and upper bounds for the diagonal
+            // Derived from rearranging the equations
+            // `k - j < height` and `j < width` (our base range is `1..k`).
+            let lower = (k as isize - height as isize + 1).max(1) as usize;
+            let upper = k.min(width);
+
+            // Iterate the diagonal in parallel
+            (lower..upper).into_par_iter().for_each(|j| {
                 let i = k - j;
-                
-                if i <= n && j <= m {
-                    // Compute indices for the neighboring cells
-                    let here = i * width + j;
-                    let above = (i - 1) * width + j;
-                    let left = i * width + j - 1;
-                    let above_left = (i - 1) * width + j - 1;
 
-                    // Compute helper values
-                    unsafe {
-                        pe.write(here, (pe.read(left) - G_EXT).max(ph.read(left) - G_INIT));
-                        pf.write(here, (pf.read(above) - G_EXT).max(ph.read(above) - G_INIT));
+                // Compute indices for the neighboring cells
+                let here = i * width + j;
+                let above = (i - 1) * width + j;
+                let left = i * width + j - 1;
+                let above_left = (i - 1) * width + j - 1;
 
-                        // Compute value and the remember the index the maximum came from
-                        // (we need this later for the traceback phase)
-                        let (previous, value) = [
-                            (0,          0),
-                            (above_left, ph.read(above_left) + Self::weight(database[i - 1], query[j - 1])),
-                            (left,       pe.read(here)),
-                            (above,      pf.read(here)),
-                        ].into_iter().max_by_key(|&(_, x)| x).unwrap();
-                        
-                        ph.write(here, value);
-                        pp.write(here, previous);
-                    }
+                // Compute helper values
+                unsafe {
+                    pe.write(here, (pe.read(left) - G_EXT).max(ph.read(left) - G_INIT));
+                    pf.write(here, (pf.read(above) - G_EXT).max(ph.read(above) - G_INIT));
+
+                    // Compute value and the remember the index the maximum came from
+                    // (we need this later for the traceback phase)
+                    let (previous, value) = [
+                        (0,          0),
+                        (above_left, ph.read(above_left) + Self::weight(database[i - 1], query[j - 1])),
+                        (left,       pe.read(here)),
+                        (above,      pf.read(here)),
+                    ].into_iter().max_by_key(|&(_, x)| x).unwrap();
+                    
+                    ph.write(here, value);
+                    pp.write(here, previous);
                 }
             });
         }
