@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, ops::Index};
 
 /// A (named) nucleid sequence.
 pub struct Sequence {
@@ -14,13 +14,26 @@ pub struct AlignedSequence {
 
 /// An alignment of two sequences.
 pub struct AlignedPair {
-    pub left: AlignedSequence,
-    pub right: AlignedSequence,
+    pub database: AlignedSequence,
+    pub query: AlignedSequence,
 }
 
 impl Sequence {
     pub fn new(name: &str, raw: Vec<u8>) -> Self {
         Self { name: name.to_owned(), raw }
+    }
+
+    /// The length of the sequence.
+    pub fn len(&self) -> usize {
+        self.raw.len()
+    }
+}
+
+impl Index<usize> for Sequence {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.raw[index]
     }
 }
 
@@ -31,8 +44,8 @@ impl AlignedSequence {
 }
 
 impl AlignedPair {
-    pub fn new(left: AlignedSequence, right: AlignedSequence) -> Self {
-        Self { left, right }
+    pub fn new(database: AlignedSequence, query: AlignedSequence) -> Self {
+        Self { database, query }
     }
 }
 

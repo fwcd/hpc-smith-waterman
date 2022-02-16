@@ -1,11 +1,10 @@
+mod engine;
+mod fasta;
+mod model;
+
 use std::{io::BufReader, fs::File};
 
 use fasta::FastaReader;
-
-use crate::model::{AlignedSequence, Sequence};
-
-mod fasta;
-mod model;
 
 fn main() {
     let file = File::open("data/uniprot_sprot.fasta").unwrap();
