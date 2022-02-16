@@ -9,8 +9,8 @@ use fasta::FastaReader;
 use model::Sequence;
 
 fn main() {
-    let d = Sequence::new("D", b"GGTTGACTA".iter().cloned().collect());
-    let q = Sequence::new("Q", b"TGTTACGG".iter().cloned().collect());
+    let d = Sequence::new("D", b"TGTTACGG".iter().cloned().collect());
+    let q = Sequence::new("Q", b"GGTTGACTA".iter().cloned().collect());
 
     let engine = NaiveEngine::default();
     let alignment = engine.align(d, q);
