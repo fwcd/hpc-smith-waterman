@@ -1,4 +1,4 @@
-use std::{fmt, ops::Index};
+use std::{fmt, ops::Index, str::FromStr};
 
 /// A (named) nucleid sequence.
 pub struct Sequence {
@@ -26,6 +26,14 @@ impl Sequence {
     /// The length of the sequence.
     pub fn len(&self) -> usize {
         self.raw.len()
+    }
+}
+
+impl FromStr for Sequence {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::new("Parsed", s.as_bytes().iter().map(|&x| x).collect()))
     }
 }
 

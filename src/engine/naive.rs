@@ -28,6 +28,10 @@ impl Default for NaiveEngine {
 }
 
 impl Engine for NaiveEngine {
+    fn name() -> &'static str {
+        "Naive (CPU, single-threaded)"
+    }
+
     fn align(&self, database: Sequence, query: Sequence) -> AlignedPair {
         let n = database.len();
         let m = query.len();
