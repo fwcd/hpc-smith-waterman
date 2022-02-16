@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
+use rayon::prelude::*;
 
-use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics};
+use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics, utils::UnsafeSlice};
 
 use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 
@@ -41,12 +42,17 @@ impl Engine for DiagonalEngine {
         let mut f = vec![0; size];
         let mut p = vec![0; size];
 
+        let ph = UnsafeSlice::new(&mut h);
+        let pe = UnsafeSlice::new(&mut e);
+        let pf = UnsafeSlice::new(&mut f);
+        let pp = UnsafeSlice::new(&mut p);
+
         // Perform scoring stage (dynamic programming-style)
         // We iterate over the diagonals and parallelize over
         // each element in the diagonal.
 
         for k in 2..=(n + m) {
-            for j in 1..k {
+            (1..k).into_par_iter().for_each(|j| {
                 let i = k - j;
                 
                 if i <= n && j <= m {
@@ -57,24 +63,24 @@ impl Engine for DiagonalEngine {
                     let above_left = (i - 1) * width + j - 1;
 
                     // Compute helper values
-                    e[here] = (e[left] - G_EXT)
-                        .max(h[left] - G_INIT);
-                    f[here] = (f[above] - G_EXT)
-                        .max(h[above] - G_INIT);
+                    unsafe {
+                        pe.write(here, (pe.read(left) - G_EXT).max(ph.read(left) - G_INIT));
+                        pf.write(here, (pf.read(above) - G_EXT).max(ph.read(above) - G_INIT));
 
-                    // Compute value and the remember the index the maximum came from
-                    // (we need this later for the traceback phase)
-                    let (previous, value) = [
-                        (0,          0),
-                        (above_left, h[above_left] + Self::weight(database[i - 1], query[j - 1])),
-                        (left,       e[here]),
-                        (above,      f[here]),
-                    ].into_iter().max_by_key(|&(_, x)| x).unwrap();
-                    
-                    h[here] = value;
-                    p[here] = previous;
+                        // Compute value and the remember the index the maximum came from
+                        // (we need this later for the traceback phase)
+                        let (previous, value) = [
+                            (0,          0),
+                            (above_left, ph.read(above_left) + Self::weight(database[i - 1], query[j - 1])),
+                            (left,       pe.read(here)),
+                            (above,      pf.read(here)),
+                        ].into_iter().max_by_key(|&(_, x)| x).unwrap();
+                        
+                        ph.write(here, value);
+                        pp.write(here, previous);
+                    }
                 }
-            }
+            });
         }
 
         metrics.lock().unwrap().record_cell_updates(4 * size);

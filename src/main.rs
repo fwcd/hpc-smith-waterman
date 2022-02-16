@@ -2,6 +2,7 @@ mod engine;
 mod fasta;
 mod metrics;
 mod model;
+mod utils;
 
 use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}};
 use rayon::prelude::*;

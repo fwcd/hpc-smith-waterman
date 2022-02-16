@@ -51,10 +51,8 @@ impl Engine for NaiveEngine {
                 let above_left = (i - 1) * width + j - 1;
 
                 // Compute helper values
-                e[here] = (e[left] - G_EXT)
-                      .max(h[left] - G_INIT);
-                f[here] = (f[above] - G_EXT)
-                      .max(h[above] - G_INIT);
+                e[here] = (e[left] - G_EXT).max(h[left] - G_INIT);
+                f[here] = (f[above] - G_EXT).max(h[above] - G_INIT);
 
                 // Compute value and the remember the index the maximum came from
                 // (we need this later for the traceback phase)
