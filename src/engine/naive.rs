@@ -49,7 +49,7 @@ impl Engine for NaiveEngine {
                                .max(h[i * width + j - 1] - self.g_init);
                 f[i * width + j] = (f[(i - 1) * width + j] - self.g_ext)
                                .max(h[(i - 1) * width + j] - self.g_init);
-                h[i * width + j] = (h[(i - 1) * width + j - 1] + Self::weight(query[i], database[j]))
+                h[i * width + j] = (h[(i - 1) * width + j - 1] + Self::weight(query[i - 1], database[j - 1]))
                                .max(e[i * width + j])
                                .max(f[i * width + j])
                                .max(0);

@@ -1,5 +1,7 @@
 mod naive;
 
+pub use naive::*;
+
 use crate::model::{Sequence, AlignedPair};
 
 /// A facility that computes the alignment of two sequences.
