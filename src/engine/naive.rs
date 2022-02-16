@@ -29,7 +29,7 @@ impl Default for NaiveEngine {
 
 impl Engine for NaiveEngine {
     fn name() -> &'static str {
-        "Naive (CPU, single-threaded)"
+        "Naive (CPU)"
     }
 
     fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> {
