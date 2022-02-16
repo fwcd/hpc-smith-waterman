@@ -65,7 +65,8 @@ impl Engine for NaiveEngine {
                 f[here] = (f[above] - self.g_ext)
                       .max(h[above] - self.g_init);
 
-                // Compute value and the direction we came from
+                // Compute value and the remember the index the maximum came from
+                // (we need this later for the traceback phase)
                 let (previous, value) = [
                     (0,          0),
                     (above_left, h[above_left] + Self::weight(database[i - 1], query[j - 1])),
