@@ -1,18 +1,21 @@
 use std::{fmt, ops::Index, str::FromStr};
 
 /// A (named) nucleid sequence.
+#[derive(PartialEq, Eq)]
 pub struct Sequence {
     pub name: String,
     pub raw: Vec<u8>,
 }
 
 /// An alignment on a nucleid sequence.
+#[derive(PartialEq, Eq)]
 pub struct AlignedSequence<'a> {
     pub sequence: &'a Sequence,
     pub indices: Vec<usize>,
 }
 
 /// An alignment of two sequences.
+#[derive(PartialEq, Eq)]
 pub struct AlignedPair<'a> {
     pub database: AlignedSequence<'a>,
     pub query: AlignedSequence<'a>,
