@@ -12,9 +12,11 @@ use fasta::FastaReader;
 use metrics::Metrics;
 use model::{Sequence, AlignedPair};
 
+use crate::utils::pretty_box;
+
 fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> where E: Default + Engine {
     let engine = E::default();
-    println!("=== {} ===", E::name());
+    println!("{}", pretty_box(E::name()));
 
     let aligned = engine.align(database, query, &Arc::new(Mutex::new(Metrics::new())));
     println!("D: {}", aligned.database);
@@ -25,7 +27,7 @@ fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> wh
 
 fn bench_sequential<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> where E: Default + Engine {
     let engine = E::default();
-    println!("=== {} (sequential) ===", E::name());
+    println!("{}", pretty_box(format!("{} (sequential)", E::name()).as_str()));
 
     let total = queries.len();
     let metrics = Arc::new(Mutex::new(Metrics::new()));
@@ -45,7 +47,7 @@ fn bench_sequential<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -
 
 fn bench_parallel<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> where E: Default + Engine + Sync {
     let engine = E::default();
-    println!("=== {} (parallel) ===", E::name());
+    println!("{}", pretty_box(format!("{} (parallel)", E::name()).as_str()));
 
     let metrics = Arc::new(Mutex::new(Metrics::new()));
     let aligns = queries.par_iter().map(|query| {
