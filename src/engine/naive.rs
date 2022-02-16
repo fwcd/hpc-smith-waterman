@@ -2,30 +2,21 @@ use std::sync::{Arc, Mutex};
 
 use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics};
 
-use super::Engine;
+use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 
 /// An engine that computes alignments using the
 /// Smith-Waterman-Algorithm (naively) on the CPU.
-pub struct NaiveEngine {
-    g_init: i16,
-    g_ext: i16,
-}
+pub struct NaiveEngine;
 
-impl NaiveEngine {
-    /// Computes the weight between two sequence elements.
-    fn weight(d: u8, q: u8) -> i16 {
-        if d == q {
-            3
-        } else {
-            -3
-        }
+impl Default for NaiveEngine {
+    fn default() -> Self {
+        Self
     }
 }
 
-impl Default for NaiveEngine {
-    /// A naive engine with the default parameters from the exercise sheet.
-    fn default() -> Self {
-        Self { g_init: 2, g_ext: 2 }
+impl NaiveEngine {
+    fn weight(d: u8, q: u8) -> i16 {
+        if d == q { WEIGHT_IF_EQ } else { -WEIGHT_IF_EQ }
     }
 }
 
@@ -60,10 +51,10 @@ impl Engine for NaiveEngine {
                 let above_left = (i - 1) * width + j - 1;
 
                 // Compute helper values
-                e[here] = (e[left] - self.g_ext)
-                      .max(h[left] - self.g_init);
-                f[here] = (f[above] - self.g_ext)
-                      .max(h[above] - self.g_init);
+                e[here] = (e[left] - G_EXT)
+                      .max(h[left] - G_INIT);
+                f[here] = (f[above] - G_EXT)
+                      .max(h[above] - G_INIT);
 
                 // Compute value and the remember the index the maximum came from
                 // (we need this later for the traceback phase)

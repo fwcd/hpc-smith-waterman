@@ -1,6 +1,10 @@
+mod constants;
 mod naive;
+mod parallel;
 
+pub use constants::*;
 pub use naive::*;
+pub use parallel::*;
 
 use std::sync::{Arc, Mutex};
 
