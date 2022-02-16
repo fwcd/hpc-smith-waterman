@@ -52,7 +52,10 @@ fn bench_parallel<E>(database: &Sequence, queries: &Vec<Sequence>) where E: Defa
 }
 
 fn main() {
-    run::<DiagonalEngine>(&"TGTTACGG".parse().unwrap(), &"GGTTGACTA".parse().unwrap());
+    let demo_database = "TGTTACGG".parse().unwrap();
+    let demo_query = "GGTTGACTA".parse().unwrap();
+    run::<NaiveEngine>(&demo_database, &demo_query);
+    run::<DiagonalEngine>(&demo_database, &demo_query);
 
     let file = File::open("data/uniprot_sprot.fasta").unwrap();
     let mut reader = FastaReader::new(BufReader::new(file));
@@ -61,4 +64,7 @@ fn main() {
 
     bench_sequential::<NaiveEngine>(&database, &queries);
     bench_parallel::<NaiveEngine>(&database, &queries);
+
+    // bench_sequential::<DiagonalEngine>(&database, &queries);
+    bench_parallel::<DiagonalEngine>(&database, &queries);
 }
