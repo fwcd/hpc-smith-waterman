@@ -2,7 +2,9 @@ mod naive;
 
 pub use naive::*;
 
-use crate::model::{Sequence, AlignedPair};
+use std::sync::{Arc, Mutex};
+
+use crate::{model::{Sequence, AlignedPair}, metrics::Metrics};
 
 /// A facility that computes the alignment of two sequences.
 pub trait Engine {
@@ -10,5 +12,5 @@ pub trait Engine {
     fn name() -> &'static str;
 
     /// Aligns the given two sequences.
-    fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a>;
+    fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence, metrics: &Arc<Mutex<Metrics>>) -> AlignedPair<'a>;
 }

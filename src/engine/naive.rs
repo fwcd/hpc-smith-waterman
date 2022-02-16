@@ -1,4 +1,6 @@
-use crate::model::{Sequence, AlignedPair, AlignedSequence};
+use std::sync::{Arc, Mutex};
+
+use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics};
 
 use super::Engine;
 
@@ -32,7 +34,7 @@ impl Engine for NaiveEngine {
         "Naive (CPU)"
     }
 
-    fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> {
+    fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence, metrics: &Arc<Mutex<Metrics>>) -> AlignedPair<'a> {
         let n = database.len();
         let m = query.len();
         let height = n + 1;
@@ -76,6 +78,8 @@ impl Engine for NaiveEngine {
             }
         }
 
+        metrics.lock().unwrap().record_cell_updates(4 * size);
+
         // Perform traceback stage (using the previously computed scoring matrix h)
 
         let mut i = (0..size).max_by_key(|&i| h[i]).unwrap();
@@ -90,6 +94,8 @@ impl Engine for NaiveEngine {
 
         database_indices.reverse();
         query_indices.reverse();
+
+        metrics.lock().unwrap().record_sequence_pair();
 
         AlignedPair::new(
             AlignedSequence::new(database, database_indices),
