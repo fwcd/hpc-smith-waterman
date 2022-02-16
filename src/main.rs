@@ -12,7 +12,7 @@ use fasta::FastaReader;
 use metrics::Metrics;
 use model::{Sequence, AlignedPair};
 
-use crate::utils::pretty_box;
+use crate::{utils::pretty_box, engine::OpenCLEngine};
 
 fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> where E: Default + Engine {
     let engine = E::default();
@@ -62,7 +62,6 @@ fn main() {
     let demo_database = "TGTTACGG".parse().unwrap();
     let demo_query = "GGTTGACTA".parse().unwrap();
     run::<NaiveEngine>(&demo_database, &demo_query);
-    run::<DiagonalEngine>(&demo_database, &demo_query);
 
     let file = File::open("data/uniprot_sprot.fasta").unwrap();
     let mut reader = FastaReader::new(BufReader::new(file));
@@ -73,7 +72,9 @@ fn main() {
     let aligns2 = bench_parallel::<NaiveEngine>(&database, &queries);
     assert!(aligns1 == aligns2);
 
-    // bench_sequential::<DiagonalEngine>(&database, &queries);
     let aligns3 = bench_parallel::<DiagonalEngine>(&database, &queries);
     assert!(aligns1 == aligns3);
+
+    let aligns4 = bench_parallel::<OpenCLEngine>(&database, &queries);
+    assert!(aligns1 == aligns4);
 }
