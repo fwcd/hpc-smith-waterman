@@ -10,5 +10,5 @@ pub trait Engine {
     fn name() -> &'static str;
 
     /// Aligns the given two sequences.
-    fn align(&self, database: Sequence, query: Sequence) -> AlignedPair;
+    fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a>;
 }

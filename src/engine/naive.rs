@@ -32,7 +32,7 @@ impl Engine for NaiveEngine {
         "Naive (CPU, single-threaded)"
     }
 
-    fn align(&self, database: Sequence, query: Sequence) -> AlignedPair {
+    fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> {
         let n = database.len();
         let m = query.len();
         let height = n + 1;

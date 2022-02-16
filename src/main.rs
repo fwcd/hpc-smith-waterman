@@ -8,7 +8,7 @@ use engine::{NaiveEngine, Engine};
 use fasta::FastaReader;
 use model::Sequence;
 
-fn run_algorithm<E>(database: Sequence, query: Sequence) where E: Default + Engine {
+fn run_algorithm<E>(database: &Sequence, query: &Sequence) where E: Default + Engine {
     let engine = E::default();
     let aligned = engine.align(database, query);
 
@@ -18,12 +18,13 @@ fn run_algorithm<E>(database: Sequence, query: Sequence) where E: Default + Engi
 }
 
 fn main() {
-    run_algorithm::<NaiveEngine>("TGTTACGG".parse().unwrap(), "GGTTGACTA".parse().unwrap());
+    run_algorithm::<NaiveEngine>(&"TGTTACGG".parse().unwrap(), &"GGTTGACTA".parse().unwrap());
 
-    // let file = File::open("data/uniprot_sprot.fasta").unwrap();
-    // let reader = FastaReader::new(BufReader::new(file));
+    let file = File::open("data/uniprot_sprot.fasta").unwrap();
+    let mut reader = FastaReader::new(BufReader::new(file));
 
-    // for seq in reader {
-    //     println!("Got {} of length {}", seq.name, seq.raw.len());
-    // }
+    let database = reader.next().unwrap();
+    for query in reader {
+        run_algorithm::<NaiveEngine>(&database, &query);
+    }
 }

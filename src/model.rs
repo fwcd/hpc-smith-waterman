@@ -7,15 +7,15 @@ pub struct Sequence {
 }
 
 /// An alignment on a nucleid sequence.
-pub struct AlignedSequence {
-    pub sequence: Sequence,
+pub struct AlignedSequence<'a> {
+    pub sequence: &'a Sequence,
     pub indices: Vec<usize>,
 }
 
 /// An alignment of two sequences.
-pub struct AlignedPair {
-    pub database: AlignedSequence,
-    pub query: AlignedSequence,
+pub struct AlignedPair<'a> {
+    pub database: AlignedSequence<'a>,
+    pub query: AlignedSequence<'a>,
 }
 
 impl Sequence {
@@ -45,14 +45,14 @@ impl Index<usize> for Sequence {
     }
 }
 
-impl AlignedSequence {
-    pub fn new(sequence: Sequence, indices: Vec<usize>) -> Self {
+impl<'a> AlignedSequence<'a> {
+    pub fn new(sequence: &'a Sequence, indices: Vec<usize>) -> Self {
         Self { sequence, indices }
     }
 }
 
-impl AlignedPair {
-    pub fn new(database: AlignedSequence, query: AlignedSequence) -> Self {
+impl<'a> AlignedPair<'a> {
+    pub fn new(database: AlignedSequence<'a>, query: AlignedSequence<'a>) -> Self {
         Self { database, query }
     }
 }
@@ -63,7 +63,7 @@ impl fmt::Display for Sequence {
     }
 }
 
-impl fmt::Display for AlignedSequence {
+impl<'a> fmt::Display for AlignedSequence<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut last: Option<usize> = None;
         for &i in &self.indices {
