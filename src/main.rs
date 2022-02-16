@@ -6,7 +6,7 @@ mod model;
 use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}};
 use rayon::prelude::*;
 
-use engine::{NaiveEngine, Engine};
+use engine::{NaiveEngine, Engine, DiagonalEngine};
 use fasta::FastaReader;
 use metrics::Metrics;
 use model::Sequence;
@@ -51,7 +51,7 @@ fn bench_parallel<E>(database: &Sequence, queries: &Vec<Sequence>) where E: Defa
 }
 
 fn main() {
-    run::<NaiveEngine>(&"TGTTACGG".parse().unwrap(), &"GGTTGACTA".parse().unwrap());
+    run::<DiagonalEngine>(&"TGTTACGG".parse().unwrap(), &"GGTTGACTA".parse().unwrap());
 
     let file = File::open("data/uniprot_sprot.fasta").unwrap();
     let mut reader = FastaReader::new(BufReader::new(file));
