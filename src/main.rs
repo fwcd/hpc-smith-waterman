@@ -2,30 +2,13 @@ mod engine;
 mod fasta;
 mod model;
 
-use std::{io::BufReader, fs::File, time::Instant, borrow::Borrow};
+use std::{io::{BufReader, self, Write}, fs::File, time::Instant};
 
 use engine::{NaiveEngine, Engine};
 use fasta::FastaReader;
 use model::Sequence;
 
-fn bench_algorithm<'a, E, I>(database: &'a Sequence, queries: I)
-    where E: Default + Engine,
-          I: IntoIterator,
-          I::Item: Borrow<Sequence> {
-    let engine = E::default();
-    println!("=== {} ===", E::name());
-
-    let start = Instant::now();
-    for query in queries {
-        engine.align(database, query.borrow());
-    }
-
-    let elapsed_ms = start.elapsed().as_millis();
-    println!("(in {} ms)", elapsed_ms)
-}
-
-fn run_algorithm<E>(database: &Sequence, query: &Sequence)
-    where E: Default + Engine {
+fn run_algorithm<E>(database: &Sequence, query: &Sequence) where E: Default + Engine {
     let engine = E::default();
     println!("=== {} ===", E::name());
 
@@ -34,12 +17,31 @@ fn run_algorithm<E>(database: &Sequence, query: &Sequence)
     println!("Q: {}", aligned.query);
 }
 
+fn bench_algorithm<E>(database: &Sequence, queries: &Vec<Sequence>) where E: Default + Engine {
+    let engine = E::default();
+    println!("=== {} ===", E::name());
+
+    let total = queries.len();
+    let start = Instant::now();
+    for (i, query) in queries.iter().enumerate() {
+        engine.align(database, query);
+        if i % 100 == 0 {
+            print!("\r[{} %]", (i * 100) / total);
+            io::stdout().flush().unwrap();
+        }
+    }
+
+    let elapsed_ms = start.elapsed().as_millis();
+    println!("\r{} ms for {} sequences", elapsed_ms, total)
+}
+
 fn main() {
     run_algorithm::<NaiveEngine>(&"TGTTACGG".parse().unwrap(), &"GGTTGACTA".parse().unwrap());
 
     let file = File::open("data/uniprot_sprot.fasta").unwrap();
     let mut reader = FastaReader::new(BufReader::new(file));
-
     let database = reader.next().unwrap();
-    bench_algorithm::<NaiveEngine, _>(&database, reader);
+    let queries = reader.take(10_000).collect();
+
+    bench_algorithm::<NaiveEngine>(&database, &queries);
 }
