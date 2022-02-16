@@ -2,22 +2,36 @@ mod engine;
 mod fasta;
 mod model;
 
-use std::{io::BufReader, fs::File, time::Instant};
+use std::{io::BufReader, fs::File, time::Instant, borrow::Borrow};
 
 use engine::{NaiveEngine, Engine};
 use fasta::FastaReader;
 use model::Sequence;
 
-fn run_algorithm<E>(database: &Sequence, query: &Sequence) where E: Default + Engine {
+fn bench_algorithm<'a, E, I>(database: &'a Sequence, queries: I)
+    where E: Default + Engine,
+          I: IntoIterator,
+          I::Item: Borrow<Sequence> {
     let engine = E::default();
     println!("=== {} ===", E::name());
 
     let start = Instant::now();
+    for query in queries {
+        engine.align(database, query.borrow());
+    }
+
+    let elapsed_ms = start.elapsed().as_millis();
+    println!("(in {} ms)", elapsed_ms)
+}
+
+fn run_algorithm<E>(database: &Sequence, query: &Sequence)
+    where E: Default + Engine {
+    let engine = E::default();
+    println!("=== {} ===", E::name());
+
     let aligned = engine.align(database, query);
-    let delta_ms = start.elapsed().as_millis();
     println!("D: {}", aligned.database);
     println!("Q: {}", aligned.query);
-    println!("(in {} ms)", delta_ms)
 }
 
 fn main() {
@@ -27,7 +41,5 @@ fn main() {
     let mut reader = FastaReader::new(BufReader::new(file));
 
     let database = reader.next().unwrap();
-    for query in reader {
-        run_algorithm::<NaiveEngine>(&database, &query);
-    }
+    bench_algorithm::<NaiveEngine, _>(&database, reader);
 }
