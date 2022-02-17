@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use ocl::{ProQue, Buffer, SpatialDims, OclPrm};
+use ocl::{ProQue, Buffer, SpatialDims, OclPrm, builders::BufferBuilder, core::{MEM_WRITE_ONLY, MEM_READ_ONLY}};
 
 use crate::{model::{Sequence, AlignedPair}, metrics::Metrics};
 
@@ -32,12 +32,10 @@ impl Default for OpenCLEngine {
 
 impl OpenCLEngine {
     /// Allocates a buffer of the specified length on the GPU.
-    fn make_gpu_buffer<T>(&self, len: impl Into<SpatialDims>) -> Buffer<T> where T: OclPrm {
+    fn gpu_buffer_builder<T>(&self, len: impl Into<SpatialDims>) -> BufferBuilder<T> where T: OclPrm {
         Buffer::builder()
             .queue(self.pro_que.queue().clone())
             .len(len)
-            .build()
-            .unwrap()
     }
 }
 
@@ -54,12 +52,12 @@ impl Engine for OpenCLEngine {
         let size = height * width;
 
         // Allocate buffers on the GPU.
-        let gpu_database: Buffer<u8> = self.make_gpu_buffer(n);
-        let gpu_query: Buffer<u8> = self.make_gpu_buffer(m);
-        let gpu_h: Buffer<i16> = self.make_gpu_buffer(size);
-        let gpu_e: Buffer<i16> = self.make_gpu_buffer(size);
-        let gpu_f: Buffer<i16> = self.make_gpu_buffer(size);
-        let gpu_p: Buffer<usize> = self.make_gpu_buffer(size);
+        let gpu_database: Buffer<u8> = self.gpu_buffer_builder(n).flags(MEM_READ_ONLY).build().unwrap();
+        let gpu_query: Buffer<u8> = self.gpu_buffer_builder(m).flags(MEM_READ_ONLY).build().unwrap();
+        let gpu_h: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
+        let gpu_e: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
+        let gpu_f: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
+        let gpu_p: Buffer<usize> = self.gpu_buffer_builder(size).flags(MEM_WRITE_ONLY).build().unwrap();
 
         // Copy database and query to GPU.
         gpu_database.write(&database.raw).enq().unwrap();
