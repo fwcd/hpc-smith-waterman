@@ -18,6 +18,11 @@ impl<'a, T> UnsafeSlice<'a, T> {
         }
     }
 
+    /// Fetches the slice.
+    pub unsafe fn slice(&self) -> &'a [T] {
+        &*(self.slice as *const [UnsafeCell<T>] as *mut [T])
+    }
+
     /// SAFETY: It is UB if two threads write to the same index without
     /// synchronization.
     pub unsafe fn write(&self, i: usize, value: T) {

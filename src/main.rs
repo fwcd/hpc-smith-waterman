@@ -91,6 +91,7 @@ fn main() {
     if args.demo || default {
         let demo_database = "TGTTACGG".parse().unwrap();
         let demo_query = "GGTTGACTA".parse().unwrap();
+        run::<DiagonalEngine>(&demo_database, &demo_query);
         run::<OpenCLEngine>(&demo_database, &demo_query);
     }
 

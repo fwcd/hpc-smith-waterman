@@ -7,7 +7,7 @@ pub fn pretty_box(s: impl Borrow<str>) -> String {
 }
 
 /// Formats a matrix of the given dimensions.
-pub fn pretty_matrix<T>(mat: &Vec<T>, width: usize) -> String where T: Debug {
+pub fn pretty_matrix<T>(mat: &[T], width: usize) -> String where T: Debug {
     let mut s = Vec::new();
     for i in (0..mat.len()).step_by(width) {
         writeln!(&mut s, "{:?}", &mat[i..(i + width)]).unwrap();
