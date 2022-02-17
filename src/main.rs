@@ -4,7 +4,8 @@ mod metrics;
 mod model;
 mod utils;
 
-use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}};
+use clap::Parser;
+use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}, env};
 use rayon::prelude::*;
 
 use engine::{NaiveEngine, Engine, DiagonalEngine};
@@ -58,23 +59,55 @@ fn bench_parallel<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> 
     aligns
 }
 
+#[derive(Parser, Debug)]
+#[clap(version, about)]
+struct Args {
+    /// Whether to run a short demo.
+    #[clap(short, long)]
+    demo: bool,
+
+    /// Whether to run the naive (CPU) engine.
+    #[clap(long)]
+    naive: bool,
+
+    /// Whether to run the diagonal (CPU) engine.
+    #[clap(long)]
+    diagonal: bool,
+
+    /// Whether to run the OpenCL (GPU) engine.
+    #[clap(long)]
+    opencl: bool,
+}
+
 fn main() {
-    let demo_database = "TGTTACGG".parse().unwrap();
-    let demo_query = "GGTTGACTA".parse().unwrap();
-    run::<NaiveEngine>(&demo_database, &demo_query);
+    let args = Args::parse();
+    let default = env::args().len() == 1;
+
+    // Run short demo if --demo is set
+    if args.demo || default {
+        let demo_database = "TGTTACGG".parse().unwrap();
+        let demo_query = "GGTTGACTA".parse().unwrap();
+        run::<NaiveEngine>(&demo_database, &demo_query);
+    }
 
     let file = File::open("data/uniprot_sprot.fasta").unwrap();
     let mut reader = FastaReader::new(BufReader::new(file));
     let database = reader.next().unwrap();
     let queries = reader.take(10_000).collect();
+    let mut all_aligns = Vec::new();
 
-    let aligns1 = bench_sequential::<NaiveEngine>(&database, &queries);
-    let aligns2 = bench_parallel::<NaiveEngine>(&database, &queries);
-    assert!(aligns1 == aligns2);
+    if args.naive || default {
+        all_aligns.push(bench_sequential::<NaiveEngine>(&database, &queries));
+        all_aligns.push(bench_parallel::<NaiveEngine>(&database, &queries));
+    }
 
-    let aligns3 = bench_parallel::<DiagonalEngine>(&database, &queries);
-    assert!(aligns1 == aligns3);
+    if args.diagonal || default {
+        all_aligns.push(bench_parallel::<DiagonalEngine>(&database, &queries));
+    }
 
-    let aligns4 = bench_parallel::<OpenCLEngine>(&database, &queries);
-    assert!(aligns1 == aligns4);
+    if args.opencl || default {
+        all_aligns.push(bench_parallel::<OpenCLEngine>(&database, &queries));
+    }
+
+    assert!(all_aligns.windows(2).all(|w| w[0] == w[1]));
 }

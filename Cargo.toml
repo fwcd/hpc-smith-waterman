@@ -1,8 +1,10 @@
 [package]
 name = "hpc-smith-waterman"
+description = "GPU-accelerated implementation of the Smith-Waterman algorithm"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+clap = { version = "3.0", features = ["derive"] }
 rayon = "1.5"
 ocl = "0.19"
