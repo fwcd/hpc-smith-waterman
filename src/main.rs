@@ -62,19 +62,23 @@ fn bench_parallel<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> 
 #[derive(Parser, Debug)]
 #[clap(version, about)]
 struct Args {
-    /// Whether to run a short demo.
+    /// Whether to run a short demo before the actual benchmarks.
     #[clap(short, long)]
     demo: bool,
 
-    /// Whether to run the naive (CPU) engine.
+    /// The path to the downloaded dataset.
+    #[clap(short, long, default_value = "data/uniprot_sprot.fasta")]
+    path: String,
+
+    /// Whether to benchmark the naive (CPU) engine.
     #[clap(long)]
     naive: bool,
 
-    /// Whether to run the diagonal (CPU) engine.
+    /// Whether to benchmark the diagonal (CPU) engine.
     #[clap(long)]
     diagonal: bool,
 
-    /// Whether to run the OpenCL (GPU) engine.
+    /// Whether to benchmark the OpenCL (GPU) engine.
     #[clap(long)]
     opencl: bool,
 }
@@ -90,24 +94,29 @@ fn main() {
         run::<NaiveEngine>(&demo_database, &demo_query);
     }
 
-    let file = File::open("data/uniprot_sprot.fasta").unwrap();
+    // Read a subset of the sequences from the downloaded dataset
+    let file = File::open(args.path).expect("Could not open dataset (did you specify --path?)");
     let mut reader = FastaReader::new(BufReader::new(file));
     let database = reader.next().unwrap();
     let queries = reader.take(10_000).collect();
     let mut all_aligns = Vec::new();
 
+    // Benchmark the naive (CPU) engine
     if args.naive || default {
         all_aligns.push(bench_sequential::<NaiveEngine>(&database, &queries));
         all_aligns.push(bench_parallel::<NaiveEngine>(&database, &queries));
     }
 
+    // Benchmark the diagonal (CPU) engine
     if args.diagonal || default {
         all_aligns.push(bench_parallel::<DiagonalEngine>(&database, &queries));
     }
 
+    // Benchmark the OpenCL (GPU) engine
     if args.opencl || default {
         all_aligns.push(bench_parallel::<OpenCLEngine>(&database, &queries));
     }
 
+    // Assert that all benchmarks yielded the same result
     assert!(all_aligns.windows(2).all(|w| w[0] == w[1]));
 }
