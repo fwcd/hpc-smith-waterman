@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use ocl::{ProQue, Buffer, SpatialDims, OclPrm, builders::BufferBuilder, core::{MEM_WRITE_ONLY, MEM_READ_ONLY}};
 
-use crate::{model::{Sequence, AlignedPair}, metrics::Metrics};
+use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics};
 
 use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 
@@ -98,9 +98,26 @@ impl Engine for OpenCLEngine {
         gpu_h.read(&mut h).enq().unwrap();
         gpu_p.read(&mut p).enq().unwrap();
 
-        println!("Got {:?}", h);
+        // Perform traceback stage (using the previously computed scoring matrix h)
 
-        // TODO
-        todo!()
+        let mut i = (0..size).max_by_key(|&i| h[i]).unwrap();
+        let mut database_indices = Vec::new();
+        let mut query_indices = Vec::new();
+
+        while i > 0 && h[i] > 0 {
+            database_indices.push((i / width) - 1);
+            query_indices.push((i % width) - 1);
+            i = p[i];
+        }
+
+        database_indices.reverse();
+        query_indices.reverse();
+
+        metrics.lock().unwrap().record_sequence_pair();
+
+        AlignedPair::new(
+            AlignedSequence::new(database, database_indices),
+            AlignedSequence::new(query, query_indices),
+        )
     }
 }
