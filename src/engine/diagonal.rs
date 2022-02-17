@@ -62,18 +62,18 @@ impl Engine for DiagonalEngine {
             (lower..upper).into_par_iter().for_each(|j| {
                 let i = k - j;
 
-                // Compute indices for the neighboring cells
+                // Compute indices of the neighboring cells
                 let here = i * width + j;
                 let above = (i - 1) * width + j;
                 let left = i * width + j - 1;
                 let above_left = (i - 1) * width + j - 1;
 
-                // Compute helper values
                 unsafe {
+                    // Compute helper values
                     pe.write(here, (pe.read(left) - G_EXT).max(ph.read(left) - G_INIT));
                     pf.write(here, (pf.read(above) - G_EXT).max(ph.read(above) - G_INIT));
 
-                    // Compute value and the remember the index the maximum came from
+                    // Compute value and remember the index the maximum came from
                     // (we need this later for the traceback phase)
                     let (previous, value) = [
                         (0,          0),
