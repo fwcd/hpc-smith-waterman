@@ -91,7 +91,7 @@ fn main() {
     if args.demo || default {
         let demo_database = "TGTTACGG".parse().unwrap();
         let demo_query = "GGTTGACTA".parse().unwrap();
-        run::<NaiveEngine>(&demo_database, &demo_query);
+        run::<OpenCLEngine>(&demo_database, &demo_query);
     }
 
     // Read a subset of the sequences from the downloaded dataset
