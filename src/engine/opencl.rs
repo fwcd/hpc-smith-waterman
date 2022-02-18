@@ -57,7 +57,7 @@ impl Engine for OpenCLEngine {
         let gpu_h: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
         let gpu_e: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
         let gpu_f: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
-        let gpu_p: Buffer<usize> = self.gpu_buffer_builder(size).flags(MEM_WRITE_ONLY).build().unwrap();
+        let gpu_p: Buffer<u32> = self.gpu_buffer_builder(size).flags(MEM_WRITE_ONLY).build().unwrap();
 
         // Copy database and query to GPU.
         gpu_database.write(&database.raw).enq().unwrap();
@@ -72,9 +72,9 @@ impl Engine for OpenCLEngine {
 
             // Create the kernel.
             let kernel = self.pro_que.kernel_builder("smith_waterman_diagonal")
-                .arg(k)
-                .arg(width)
-                .arg(lower)
+                .arg(k as u32)
+                .arg(width as u32)
+                .arg(lower as u32)
                 .arg(&gpu_database)
                 .arg(&gpu_query)
                 .arg(&gpu_h)
@@ -116,7 +116,7 @@ impl Engine for OpenCLEngine {
         while i > 0 && h[i] > 0 {
             database_indices.push((i / width) - 1);
             query_indices.push((i % width) - 1);
-            i = p[i];
+            i = p[i] as usize;
         }
 
         database_indices.reverse();
