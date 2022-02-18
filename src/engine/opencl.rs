@@ -87,12 +87,6 @@ impl Engine for OpenCLEngine {
 
             // Enqueue the kernel.
             unsafe { kernel.enq().unwrap(); }
-
-            // DEBUG
-            let mut h = vec![0; size];
-            gpu_h.read(&mut h).enq().unwrap();
-            println!("k = {}", k);
-            println!("{}", pretty_matrix(&h, width));
         }
 
         metrics.lock().unwrap().record_cell_updates(4 * size);
@@ -105,7 +99,7 @@ impl Engine for OpenCLEngine {
         gpu_p.read(&mut p).enq().unwrap();
 
         // DEBUG
-        println!("{}", pretty_matrix(&h, width));
+        println!("{}", pretty_matrix(&p, width));
 
         // Perform traceback stage (using the previously computed scoring matrix h)
 

@@ -86,12 +86,11 @@ impl Engine for DiagonalEngine {
                     pp.write(here, previous);
                 }
             });
+        }
 
-            // DEBUG
-            unsafe {
-                println!("k = {}", k);
-                println!("{}", pretty_matrix(&ph.slice(), width));
-            }
+        // DEBUG
+        unsafe {
+            println!("{}", pretty_matrix(&pp.slice(), width));
         }
 
         metrics.lock().unwrap().record_cell_updates(4 * size);

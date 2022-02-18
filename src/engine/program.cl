@@ -9,29 +9,29 @@ __kernel void smith_waterman_diagonal(
     __global short *h,
     __global short *e,
     __global short *f,
-    __global short *p
+    __global uint *p
 ) {
-    int j = lower + get_global_id(0);
-    int i = k - j;
+    uint j = lower + get_global_id(0);
+    uint i = k - j;
 
     // Compute indices of the neighboring cells
-    int here = i * width + j;
-    int above = (i - 1) * width + j;
-    int left = i * width + j - 1;
-    int above_left = (i - 1) * width + j - 1;
+    uint here = i * width + j;
+    uint above = (i - 1) * width + j;
+    uint left = i * width + j - 1;
+    uint above_left = (i - 1) * width + j - 1;
 
     // Compute helper values
-    int e_here = max(e[left] - G_EXT, h[left] - G_INIT);
-    int f_here = max(f[above] - G_EXT, h[above] - G_INIT);
+    short e_here = max(e[left] - G_EXT, h[left] - G_INIT);
+    short f_here = max(f[above] - G_EXT, h[above] - G_INIT);
 
     e[here] = e_here;
     f[here] = f_here;
 
     // Compute value and remember the index the maximum came from
     // (we need this later for the traceback phase)
-    int from_above_left = h[above_left] + (database[i - 1] == query[j - 1] ? WEIGHT_IF_EQ : -WEIGHT_IF_EQ);
-    int max_origin = 0;
-    int max_value = 0;
+    short from_above_left = h[above_left] + (database[i - 1] == query[j - 1] ? WEIGHT_IF_EQ : -WEIGHT_IF_EQ);
+    uint max_origin = 0;
+    short max_value = 0;
     
     if (from_above_left > max_value) {
         max_origin = above_left;
