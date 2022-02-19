@@ -3,7 +3,6 @@
 __kernel void smith_waterman_diagonal(
     uint k,
     uint width,
-    uint lower,
     __global uchar *database,
     __global uchar *query,
     __global short *h,
@@ -11,7 +10,7 @@ __kernel void smith_waterman_diagonal(
     __global short *f,
     __global uint *p
 ) {
-    uint j = lower + get_global_id(0);
+    uint j = get_global_id(0);
     uint i = k - j;
 
     // Compute indices of the neighboring cells
