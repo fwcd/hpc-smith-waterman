@@ -48,8 +48,8 @@ impl Default for OpenCLEngine {
 }
 
 impl Engine for OpenCLEngine {
-    fn name() -> &'static str {
-        "OpenCL (GPU)"
+    fn name(&self) -> String {
+        format!("OpenCL (GPU: {})", self.device.name().unwrap())
     }
 
     fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence, metrics: &Arc<Mutex<Metrics>>) -> AlignedPair<'a> {

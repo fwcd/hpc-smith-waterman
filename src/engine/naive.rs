@@ -21,8 +21,8 @@ impl NaiveEngine {
 }
 
 impl Engine for NaiveEngine {
-    fn name() -> &'static str {
-        "Naive (CPU)"
+    fn name(&self) -> String {
+        "Naive (CPU)".to_owned()
     }
 
     fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence, metrics: &Arc<Mutex<Metrics>>) -> AlignedPair<'a> {

@@ -17,7 +17,7 @@ use crate::{utils::{pretty_box, EqualAsserter}, engine::OpenCLEngine};
 
 fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> where E: Default + Engine {
     let engine = E::default();
-    println!("{}", pretty_box(E::name()));
+    println!("{}", pretty_box(engine.name()));
 
     let aligned = engine.align(database, query, &Arc::new(Mutex::new(Metrics::new())));
     println!("D: {}", aligned.database);
@@ -28,7 +28,7 @@ fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> wh
 
 fn bench_sequential<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> where E: Default + Engine {
     let engine = E::default();
-    println!("{}", pretty_box(format!("{} (sequential)", E::name())));
+    println!("{}", pretty_box(format!("{} (sequential)", engine.name())));
 
     let total = queries.len();
     let metrics = Arc::new(Mutex::new(Metrics::new()));
@@ -48,7 +48,7 @@ fn bench_sequential<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -
 
 fn bench_parallel<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> where E: Default + Engine + Sync {
     let engine = E::default();
-    println!("{}", pretty_box(format!("{} (parallel)", E::name())));
+    println!("{}", pretty_box(format!("{} (parallel)", engine.name())));
 
     let metrics = Arc::new(Mutex::new(Metrics::new()));
     let aligns = queries.par_iter().map(|query| {

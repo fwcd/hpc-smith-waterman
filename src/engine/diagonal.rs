@@ -23,8 +23,8 @@ impl DiagonalEngine {
 }
 
 impl Engine for DiagonalEngine {
-    fn name() -> &'static str {
-        "Diagonal (CPU)"
+    fn name(&self) -> String {
+        "Diagonal (CPU)".to_owned()
     }
 
     fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence, metrics: &Arc<Mutex<Metrics>>) -> AlignedPair<'a> {
