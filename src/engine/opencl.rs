@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use ocl::{ProQue, Buffer, SpatialDims, OclPrm, builders::BufferBuilder, core::{MEM_WRITE_ONLY, MEM_READ_ONLY}};
 
-use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics, utils::pretty_matrix};
+use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics};
 
 use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 
@@ -63,6 +63,20 @@ impl Engine for OpenCLEngine {
         gpu_database.write(&database.raw).enq().unwrap();
         gpu_query.write(&query.raw).enq().unwrap();
 
+        // Create the kernel.
+        let mut kernel = self.pro_que.kernel_builder("smith_waterman_diagonal")
+            .arg_named("k", 0 as u32)
+            .arg(width as u32)
+            .arg_named("lower", 0 as u32)
+            .arg(&gpu_database)
+            .arg(&gpu_query)
+            .arg(&gpu_h)
+            .arg(&gpu_e)
+            .arg(&gpu_f)
+            .arg(&gpu_p)
+            .build()
+            .unwrap();
+
         for k in 2..=(n + m) {
             // The lower and upper bounds for the diagonal
             // Derived from rearranging the equations
@@ -70,20 +84,9 @@ impl Engine for OpenCLEngine {
             let lower = (k as isize - height as isize + 1).max(1) as usize;
             let upper = k.min(width);
 
-            // Create the kernel.
-            let kernel = self.pro_que.kernel_builder("smith_waterman_diagonal")
-                .arg(k as u32)
-                .arg(width as u32)
-                .arg(lower as u32)
-                .arg(&gpu_database)
-                .arg(&gpu_query)
-                .arg(&gpu_h)
-                .arg(&gpu_e)
-                .arg(&gpu_f)
-                .arg(&gpu_p)
-                .global_work_size(upper - lower)
-                .build()
-                .unwrap();
+            kernel.set_arg("k", k as u32).unwrap();
+            kernel.set_arg("lower", lower as u32).unwrap();
+            kernel.set_default_global_work_size((upper - lower).into());
 
             // Enqueue the kernel.
             unsafe { kernel.enq().unwrap(); }
