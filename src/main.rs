@@ -13,7 +13,7 @@ use fasta::FastaReader;
 use metrics::Metrics;
 use model::{Sequence, AlignedPair};
 
-use crate::{utils::pretty_box, engine::OpenCLEngine};
+use crate::{utils::{pretty_box, EqualAsserter}, engine::OpenCLEngine};
 
 fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> where E: Default + Engine {
     let engine = E::default();
@@ -104,24 +104,21 @@ fn main() {
     let mut reader = FastaReader::new(BufReader::new(file));
     let database = reader.next().unwrap();
     let queries = reader.take(args.number).collect();
-    let mut all_aligns = Vec::new();
+    let mut asserter = EqualAsserter::new();
 
     // Benchmark the naive (CPU) engine
     if args.naive || default {
-        all_aligns.push(bench_sequential::<NaiveEngine>(&database, &queries));
-        all_aligns.push(bench_parallel::<NaiveEngine>(&database, &queries));
+        asserter.feed("naive sequential", bench_sequential::<NaiveEngine>(&database, &queries));
+        asserter.feed("naive parallel", bench_parallel::<NaiveEngine>(&database, &queries));
     }
 
     // Benchmark the diagonal (CPU) engine
     if args.diagonal || default {
-        all_aligns.push(bench_parallel::<DiagonalEngine>(&database, &queries));
+        asserter.feed("diagonal parallel", bench_parallel::<DiagonalEngine>(&database, &queries));
     }
 
     // Benchmark the OpenCL (GPU) engine
     if args.opencl || default {
-        all_aligns.push(bench_parallel::<OpenCLEngine>(&database, &queries));
+        asserter.feed("opencl parallel", bench_parallel::<OpenCLEngine>(&database, &queries));
     }
-
-    // Assert that all benchmarks yielded the same result
-    assert!(all_aligns.windows(2).all(|w| w[0] == w[1]));
 }

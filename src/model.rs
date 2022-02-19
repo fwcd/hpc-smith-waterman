@@ -66,6 +66,12 @@ impl fmt::Display for Sequence {
     }
 }
 
+impl fmt::Debug for Sequence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 impl<'a> fmt::Display for AlignedSequence<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut last: Option<usize> = None;
@@ -79,5 +85,23 @@ impl<'a> fmt::Display for AlignedSequence<'a> {
             last = Some(i);
         }
         Ok(())
+    }
+}
+
+impl<'a> fmt::Debug for AlignedSequence<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl<'a> fmt::Display for AlignedPair<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "(D: {}, Q: {})", self.database, self.query)
+    }
+}
+
+impl<'a> fmt::Debug for AlignedPair<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
     }
 }
