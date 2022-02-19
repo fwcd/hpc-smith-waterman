@@ -8,6 +8,7 @@ edition = "2021"
 clap = { version = "3.0", features = ["derive"] }
 rayon = "1.5"
 ocl = "0.19"
+pretty_assertions = "1.1"
 
 # For profiling, build using `cargo build --profile profiling`
 [profile.profiling]

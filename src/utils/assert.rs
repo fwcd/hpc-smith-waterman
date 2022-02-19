@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use pretty_assertions::assert_eq;
 
 /// A facility that asserts that all values it's given
 /// are equal (more specificially, that every value
