@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "hpc-smith-waterman"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "ocl",
