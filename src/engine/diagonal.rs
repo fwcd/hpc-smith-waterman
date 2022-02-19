@@ -75,15 +75,15 @@ impl Engine for DiagonalEngine {
 
                     // Compute value and remember the index the maximum came from
                     // (we need this later for the traceback phase)
-                    let (previous, value) = [
+                    let (max_origin, max_value) = [
                         (0,          0),
                         (above_left, ph.read(above_left) + Self::weight(database[i - 1], query[j - 1])),
                         (left,       pe.read(here)),
                         (above,      pf.read(here)),
                     ].into_iter().max_by_key(|&(_, x)| x).unwrap();
                     
-                    ph.write(here, value);
-                    pp.write(here, previous);
+                    ph.write(here, max_value);
+                    pp.write(here, max_origin);
                 }
             });
         }

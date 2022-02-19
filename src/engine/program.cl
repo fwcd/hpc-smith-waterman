@@ -33,17 +33,17 @@ __kernel void smith_waterman_diagonal(
     uint max_origin = 0;
     short max_value = 0;
     
-    if (from_above_left > max_value) {
+    if (from_above_left >= max_value) {
         max_origin = above_left;
         max_value = from_above_left;
     }
 
-    if (e_here > max_value) {
+    if (e_here >= max_value) {
         max_origin = left;
         max_value = e_here;
     }
 
-    if (f_here > max_value) {
+    if (f_here >= max_value) {
         max_origin = above;
         max_value = f_here;
     }

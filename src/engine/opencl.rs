@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use ocl::{ProQue, Buffer, SpatialDims, OclPrm, builders::BufferBuilder, core::{MEM_WRITE_ONLY, MEM_READ_ONLY}};
 
-use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics};
+use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics, utils::pretty_matrix};
 
 use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 

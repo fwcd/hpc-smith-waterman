@@ -56,15 +56,15 @@ impl Engine for NaiveEngine {
 
                 // Compute value and the remember the index the maximum came from
                 // (we need this later for the traceback phase)
-                let (previous, value) = [
+                let (max_origin, max_value) = [
                     (0,          0),
                     (above_left, h[above_left] + Self::weight(database[i - 1], query[j - 1])),
                     (left,       e[here]),
                     (above,      f[here]),
                 ].into_iter().max_by_key(|&(_, x)| x).unwrap();
                 
-                h[here] = value;
-                p[here] = previous;
+                h[here] = max_value;
+                p[here] = max_origin;
             }
         }
 
