@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use ocl::{ProQue, Buffer, SpatialDims, OclPrm, builders::BufferBuilder, core::{MEM_WRITE_ONLY, MEM_READ_ONLY}};
+use ocl::{Buffer, core::{MEM_WRITE_ONLY, MEM_READ_ONLY}, Queue, Program, Context, Platform, Device, DeviceType, Kernel};
 
 use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics};
 
@@ -9,7 +9,9 @@ use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 /// Smith-Waterman-Algorithm with OpenCL on the
 /// GPU.
 pub struct OpenCLEngine {
-    pro_que: ProQue,
+    program: Program,
+    device: Device,
+    context: Context,
 }
 
 impl Default for OpenCLEngine {
@@ -20,22 +22,28 @@ impl Default for OpenCLEngine {
             .replace("G_INIT", &G_INIT.to_string())
             .replace("WEIGHT_IF_EQ", &WEIGHT_IF_EQ.to_string());
 
-        // Create the program, queue and context.
-        let pro_que = ProQue::builder()
-            .src(program_src)
+        // Fetch platform and device
+        let platform = Platform::default();
+        let device = Device::list(platform, Some(DeviceType::GPU))
+            .unwrap()
+            .into_iter()
+            .next()
+            .expect("No GPU found for OpenCL");
+
+        // Create the context
+        let context = Context::builder()
+            .platform(platform)
+            .devices(device)
             .build()
             .unwrap();
 
-        Self { pro_que }
-    }
-}
+        // Create the program
+        let program = Program::builder()
+            .src(program_src)
+            .build(&context)
+            .unwrap();
 
-impl OpenCLEngine {
-    /// Allocates a buffer of the specified length on the GPU.
-    fn gpu_buffer_builder<T>(&self, len: impl Into<SpatialDims>) -> BufferBuilder<T> where T: OclPrm {
-        Buffer::builder()
-            .queue(self.pro_que.queue().clone())
-            .len(len)
+        Self { program, device, context }
     }
 }
 
@@ -51,20 +59,26 @@ impl Engine for OpenCLEngine {
         let width = m + 1;
         let size = height * width;
 
+        // Create a queue
+        let queue = Queue::new(&self.context, self.device, None).unwrap();
+
         // Allocate buffers on the GPU.
-        let gpu_database: Buffer<u8> = self.gpu_buffer_builder(n).flags(MEM_READ_ONLY).build().unwrap();
-        let gpu_query: Buffer<u8> = self.gpu_buffer_builder(m).flags(MEM_READ_ONLY).build().unwrap();
-        let gpu_h: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
-        let gpu_e: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
-        let gpu_f: Buffer<i16> = self.gpu_buffer_builder(size).build().unwrap();
-        let gpu_p: Buffer<u32> = self.gpu_buffer_builder(size).flags(MEM_WRITE_ONLY).build().unwrap();
+        let gpu_database: Buffer<u8> = Buffer::builder().queue(queue.clone()).len(n).flags(MEM_READ_ONLY).build().unwrap();
+        let gpu_query: Buffer<u8> = Buffer::builder().queue(queue.clone()).len(m).flags(MEM_READ_ONLY).build().unwrap();
+        let gpu_h: Buffer<i16> = Buffer::builder().queue(queue.clone()).len(size).build().unwrap();
+        let gpu_e: Buffer<i16> = Buffer::builder().queue(queue.clone()).len(size).build().unwrap();
+        let gpu_f: Buffer<i16> = Buffer::builder().queue(queue.clone()).len(size).build().unwrap();
+        let gpu_p: Buffer<u32> = Buffer::builder().queue(queue.clone()).len(size).flags(MEM_WRITE_ONLY).build().unwrap();
 
         // Copy database and query to GPU.
         gpu_database.write(&database.raw).enq().unwrap();
         gpu_query.write(&query.raw).enq().unwrap();
 
         // Create the kernel.
-        let mut kernel = self.pro_que.kernel_builder("smith_waterman_diagonal")
+        let mut kernel = Kernel::builder()
+            .name("smith_waterman_diagonal")
+            .program(&self.program)
+            .queue(queue)
             .arg(width as u32)
             .arg(&gpu_database)
             .arg(&gpu_query)
