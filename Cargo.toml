@@ -8,3 +8,10 @@ edition = "2021"
 clap = { version = "3.0", features = ["derive"] }
 rayon = "1.5"
 ocl = "0.19"
+
+# For profiling, build using `cargo build --profile profiling`
+[profile.profiling]
+inherits = "release"
+debug = true
+opt-level = 3
+lto = true
