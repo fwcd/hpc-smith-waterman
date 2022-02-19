@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use rayon::prelude::*;
 
-use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics, utils::{UnsafeSlice, pretty_matrix}};
+use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics, utils::UnsafeSlice};
 
 use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 
@@ -86,11 +86,6 @@ impl Engine for DiagonalEngine {
                     pp.write(here, previous);
                 }
             });
-        }
-
-        // DEBUG
-        unsafe {
-            println!("{}", pretty_matrix(&pp.slice(), width));
         }
 
         metrics.lock().unwrap().record_cell_updates(4 * size);
