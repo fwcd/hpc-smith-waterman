@@ -70,6 +70,10 @@ struct Args {
     #[clap(short, long, default_value = "data/uniprot_sprot.fasta")]
     path: String,
 
+    /// The maximum number of sequences to benchmark against.
+    #[clap(short, long, default_value_t = 10_000)]
+    number: usize,
+
     /// Whether to benchmark the naive (CPU) engine.
     #[clap(long)]
     naive: bool,
@@ -85,7 +89,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let default = env::args().len() == 1;
+    let default = !args.demo && !args.naive && !args.diagonal && !args.opencl;
 
     // Run short demo if --demo is set
     if args.demo || default {
@@ -99,7 +103,7 @@ fn main() {
     let file = File::open(args.path).expect("Could not open dataset (did you specify --path?)");
     let mut reader = FastaReader::new(BufReader::new(file));
     let database = reader.next().unwrap();
-    let queries = reader.take(10_000).collect();
+    let queries = reader.take(args.number).collect();
     let mut all_aligns = Vec::new();
 
     // Benchmark the naive (CPU) engine
