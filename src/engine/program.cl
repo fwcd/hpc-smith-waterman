@@ -1,7 +1,6 @@
 // Computes a diagonal slice of the Smith-Waterman matrices on the GPU.
 // Mostly a translation of the inner loop from the diagonal engine.
 __kernel void smith_waterman_diagonal(
-    uint k,
     uint width,
     __global uchar *database,
     __global uchar *query,
@@ -10,7 +9,8 @@ __kernel void smith_waterman_diagonal(
     __global short *f,
     __global uint *p
 ) {
-    uint j = get_global_id(0);
+    uint k = get_global_id(0);
+    uint j = get_global_id(1);
     uint i = k - j;
 
     // Compute indices of the neighboring cells

@@ -65,7 +65,6 @@ impl Engine for OpenCLEngine {
 
         // Create the kernel.
         let mut kernel = self.pro_que.kernel_builder("smith_waterman_diagonal")
-            .arg_named("k", 0 as u32)
             .arg(width as u32)
             .arg(&gpu_database)
             .arg(&gpu_query)
@@ -83,9 +82,9 @@ impl Engine for OpenCLEngine {
             let lower = (k as isize - height as isize + 1).max(1) as usize;
             let upper = k.min(width);
 
-            kernel.set_arg("k", k as u32).unwrap();
-            kernel.set_default_global_work_size((upper - lower).into());
-            kernel.set_default_global_work_offset(lower.into());
+            // Set the size and offset of the kernel (the indices represent k and j)
+            kernel.set_default_global_work_size((1, upper - lower).into());
+            kernel.set_default_global_work_offset((k, lower).into());
 
             // Enqueue the kernel.
             unsafe { kernel.enq().unwrap(); }
