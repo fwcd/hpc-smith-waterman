@@ -5,7 +5,7 @@ mod model;
 mod utils;
 
 use clap::Parser;
-use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}, env};
+use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}};
 use rayon::prelude::*;
 
 use engine::{NaiveEngine, Engine, DiagonalEngine};
@@ -15,8 +15,7 @@ use model::{Sequence, AlignedPair};
 
 use crate::{utils::{pretty_box, EqualAsserter}, engine::OpenCLEngine};
 
-fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> where E: Default + Engine {
-    let engine = E::default();
+fn run<'a>(engine: &impl Engine, database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> {
     println!("{}", pretty_box(engine.name()));
 
     let aligned = engine.align(database, query, &Arc::new(Mutex::new(Metrics::new())));
@@ -26,8 +25,7 @@ fn run<'a, E>(database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> wh
     aligned
 }
 
-fn bench_sequential<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> where E: Default + Engine {
-    let engine = E::default();
+fn bench_sequential<'a>(engine: &impl Engine, database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> {
     println!("{}", pretty_box(format!("{} (sequential)", engine.name())));
 
     let total = queries.len();
@@ -46,8 +44,7 @@ fn bench_sequential<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -
     aligns
 }
 
-fn bench_parallel<'a, E>(database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> where E: Default + Engine + Sync {
-    let engine = E::default();
+fn bench_parallel<'a>(engine: &(impl Engine + Sync), database: &'a Sequence, queries: &'a Vec<Sequence>) -> Vec<AlignedPair<'a>> {
     println!("{}", pretty_box(format!("{} (parallel)", engine.name())));
 
     let metrics = Arc::new(Mutex::new(Metrics::new()));
@@ -85,18 +82,26 @@ struct Args {
     /// Whether to benchmark the OpenCL (GPU) engine.
     #[clap(long)]
     opencl: bool,
+
+    /// The index of the GPU to use for the OpenCL engine.
+    #[clap(long, default_value_t = 0)]
+    gpu_index: usize,
 }
 
 fn main() {
     let args = Args::parse();
     let default = !args.demo && !args.naive && !args.diagonal && !args.opencl;
 
+    // Create engines
+    let naive_engine = NaiveEngine;
+    let diagonal_engine = DiagonalEngine;
+    let opencl_engine = OpenCLEngine::new(args.gpu_index);
+
     // Run short demo if --demo is set
     if args.demo || default {
         let demo_database = "TGTTACGG".parse().unwrap();
         let demo_query = "GGTTGACTA".parse().unwrap();
-        run::<DiagonalEngine>(&demo_database, &demo_query);
-        run::<OpenCLEngine>(&demo_database, &demo_query);
+        run(&diagonal_engine, &demo_database, &demo_query);
     }
 
     // Read a subset of the sequences from the downloaded dataset
@@ -108,17 +113,17 @@ fn main() {
 
     // Benchmark the naive (CPU) engine
     if args.naive || default {
-        asserter.feed("naive sequential", bench_sequential::<NaiveEngine>(&database, &queries));
-        asserter.feed("naive parallel", bench_parallel::<NaiveEngine>(&database, &queries));
+        asserter.feed("naive sequential", bench_sequential(&naive_engine, &database, &queries));
+        asserter.feed("naive parallel", bench_parallel(&naive_engine, &database, &queries));
     }
 
     // Benchmark the diagonal (CPU) engine
     if args.diagonal || default {
-        asserter.feed("diagonal parallel", bench_parallel::<DiagonalEngine>(&database, &queries));
+        asserter.feed("diagonal parallel", bench_parallel(&diagonal_engine, &database, &queries));
     }
 
     // Benchmark the OpenCL (GPU) engine
     if args.opencl || default {
-        asserter.feed("opencl parallel", bench_parallel::<OpenCLEngine>(&database, &queries));
+        asserter.feed("opencl parallel", bench_parallel(&opencl_engine, &database, &queries));
     }
 }

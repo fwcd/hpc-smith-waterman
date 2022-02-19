@@ -10,12 +10,6 @@ use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 /// diagonals on the CPU.
 pub struct DiagonalEngine;
 
-impl Default for DiagonalEngine {
-    fn default() -> Self {
-        Self
-    }
-}
-
 impl DiagonalEngine {
     fn weight(d: u8, q: u8) -> i16 {
         if d == q { WEIGHT_IF_EQ } else { -WEIGHT_IF_EQ }

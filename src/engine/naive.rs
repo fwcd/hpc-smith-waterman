@@ -8,12 +8,6 @@ use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 /// Smith-Waterman-Algorithm (naively) on the CPU.
 pub struct NaiveEngine;
 
-impl Default for NaiveEngine {
-    fn default() -> Self {
-        Self
-    }
-}
-
 impl NaiveEngine {
     fn weight(d: u8, q: u8) -> i16 {
         if d == q { WEIGHT_IF_EQ } else { -WEIGHT_IF_EQ }

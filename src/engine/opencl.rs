@@ -14,8 +14,8 @@ pub struct OpenCLEngine {
     context: Context,
 }
 
-impl Default for OpenCLEngine {
-    fn default() -> Self {
+impl OpenCLEngine {
+    pub fn new(gpu_index: usize) -> Self {
         // The OpenCL program source code.
         let program_src: String = include_str!("program.cl")
             .replace("G_EXT", &G_EXT.to_string())
@@ -27,8 +27,8 @@ impl Default for OpenCLEngine {
         let device = Device::list(platform, Some(DeviceType::GPU))
             .unwrap()
             .into_iter()
-            .next()
-            .expect("No GPU found for OpenCL");
+            .nth(gpu_index)
+            .expect("GPU not found for OpenCL");
 
         // Create the context
         let context = Context::builder()
