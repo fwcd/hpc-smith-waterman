@@ -8,7 +8,7 @@ use clap::Parser;
 use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}};
 use rayon::prelude::*;
 
-use engine::{NaiveEngine, Engine, DiagonalEngine};
+use engine::{NaiveEngine, Engine, DiagonalEngine, OpenCLNaiveEngine};
 use fasta::FastaReader;
 use metrics::Metrics;
 use model::{Sequence, AlignedPair};
@@ -79,9 +79,13 @@ struct Args {
     #[clap(long)]
     diagonal: bool,
 
-    /// Whether to benchmark the OpenCL (GPU) engine.
+    /// Whether to benchmark the naive OpenCL (GPU) engine.
     #[clap(long)]
-    opencl: bool,
+    opencl_naive: bool,
+
+    /// Whether to benchmark the diagonal OpenCL (GPU) engine.
+    #[clap(long)]
+    opencl_diagonal: bool,
 
     /// The index of the GPU to use for the OpenCL engine.
     #[clap(long, default_value_t = 0)]
@@ -89,13 +93,19 @@ struct Args {
 }
 
 fn main() {
+    // Parse CLI args
     let args = Args::parse();
-    let default = !args.demo && !args.naive && !args.diagonal && !args.opencl;
+    let default = !args.demo
+        && !args.naive
+        && !args.diagonal
+        && !args.opencl_diagonal
+        && !args.opencl_naive;
 
     // Create engines
     let naive_engine = NaiveEngine;
     let diagonal_engine = DiagonalEngine;
-    let opencl_engine = OpenCLDiagonalEngine::new(args.gpu_index);
+    let opencl_naive_engine = OpenCLNaiveEngine::new(args.gpu_index);
+    let opencl_diagonal_engine = OpenCLDiagonalEngine::new(args.gpu_index);
 
     // Run short demo if --demo is set
     if args.demo || default {
@@ -122,8 +132,13 @@ fn main() {
         asserter.feed("diagonal parallel", bench_parallel(&diagonal_engine, &database, &queries));
     }
 
-    // Benchmark the OpenCL (GPU) engine
-    if args.opencl || default {
-        asserter.feed("opencl parallel", bench_parallel(&opencl_engine, &database, &queries));
+    // Benchmark the OpenCL naive (GPU) engine
+    if args.opencl_naive || default {
+        asserter.feed("opencl naive parallel", bench_parallel(&opencl_naive_engine, &database, &queries));
+    }
+
+    // Benchmark the OpenCL diagonal (GPU) engine
+    if args.opencl_diagonal || default {
+        asserter.feed("opencl diagonal parallel", bench_parallel(&opencl_diagonal_engine, &database, &queries));
     }
 }
