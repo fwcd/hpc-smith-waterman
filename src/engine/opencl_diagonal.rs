@@ -7,7 +7,7 @@ use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 
 /// An engine that computes alignments using the
 /// Smith-Waterman-Algorithm with OpenCL on the
-/// GPU.
+/// GPU by parallelizing over the diagonals.
 pub struct OpenCLDiagonalEngine {
     program: Program,
     device: Device,
