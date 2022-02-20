@@ -1,12 +1,12 @@
 mod constants;
 mod naive;
 mod diagonal;
-mod opencl;
+mod opencl_diagonal;
 
 pub use constants::*;
 pub use naive::*;
 pub use diagonal::*;
-pub use opencl::*;
+pub use opencl_diagonal::*;
 
 use std::sync::{Arc, Mutex};
 

@@ -8,16 +8,16 @@ use super::{Engine, G_INIT, G_EXT, WEIGHT_IF_EQ};
 /// An engine that computes alignments using the
 /// Smith-Waterman-Algorithm with OpenCL on the
 /// GPU.
-pub struct OpenCLEngine {
+pub struct OpenCLDiagonalEngine {
     program: Program,
     device: Device,
     context: Context,
 }
 
-impl OpenCLEngine {
+impl OpenCLDiagonalEngine {
     pub fn new(gpu_index: usize) -> Self {
         // The OpenCL program source code.
-        let program_src: String = include_str!("program.cl")
+        let program_src: String = include_str!("opencl_diagonal.cl")
             .replace("G_EXT", &G_EXT.to_string())
             .replace("G_INIT", &G_INIT.to_string())
             .replace("WEIGHT_IF_EQ", &WEIGHT_IF_EQ.to_string());
@@ -47,9 +47,9 @@ impl OpenCLEngine {
     }
 }
 
-impl Engine for OpenCLEngine {
+impl Engine for OpenCLDiagonalEngine {
     fn name(&self) -> String {
-        format!("OpenCL (GPU: {})", self.device.name().unwrap())
+        format!("OpenCL Diagonal (GPU: {})", self.device.name().unwrap())
     }
 
     fn align<'a>(&self, database: &'a Sequence, query: &'a Sequence, metrics: &Arc<Mutex<Metrics>>) -> AlignedPair<'a> {

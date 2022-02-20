@@ -13,7 +13,7 @@ use fasta::FastaReader;
 use metrics::Metrics;
 use model::{Sequence, AlignedPair};
 
-use crate::{utils::{pretty_box, EqualAsserter}, engine::OpenCLEngine};
+use crate::{utils::{pretty_box, EqualAsserter}, engine::OpenCLDiagonalEngine};
 
 fn run<'a>(engine: &impl Engine, database: &'a Sequence, query: &'a Sequence) -> AlignedPair<'a> {
     println!("{}", pretty_box(engine.name()));
@@ -95,7 +95,7 @@ fn main() {
     // Create engines
     let naive_engine = NaiveEngine;
     let diagonal_engine = DiagonalEngine;
-    let opencl_engine = OpenCLEngine::new(args.gpu_index);
+    let opencl_engine = OpenCLDiagonalEngine::new(args.gpu_index);
 
     // Run short demo if --demo is set
     if args.demo || default {
