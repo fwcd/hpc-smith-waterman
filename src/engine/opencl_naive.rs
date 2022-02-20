@@ -66,7 +66,6 @@ impl Engine for OpenCLNaiveEngine {
         let gpu_database: Buffer<u8> = Buffer::builder().queue(queue.clone()).len(n).flags(MEM_READ_ONLY).build().unwrap();
         let gpu_query: Buffer<u8> = Buffer::builder().queue(queue.clone()).len(m).flags(MEM_READ_ONLY).build().unwrap();
         let gpu_h: Buffer<i16> = Buffer::builder().queue(queue.clone()).len(size).build().unwrap();
-        let gpu_e: Buffer<i16> = Buffer::builder().queue(queue.clone()).len(size).build().unwrap();
         let gpu_f: Buffer<i16> = Buffer::builder().queue(queue.clone()).len(size).build().unwrap();
         let gpu_p: Buffer<u32> = Buffer::builder().queue(queue.clone()).len(size).flags(MEM_WRITE_ONLY).build().unwrap();
 
@@ -84,7 +83,6 @@ impl Engine for OpenCLNaiveEngine {
             .arg(&gpu_database)
             .arg(&gpu_query)
             .arg(&gpu_h)
-            .arg(&gpu_e)
             .arg(&gpu_f)
             .arg(&gpu_p)
             .global_work_size(1)

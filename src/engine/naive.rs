@@ -26,17 +26,20 @@ impl Engine for NaiveEngine {
         let width = m + 1;
         let size = height * width;
 
-        // Create scoring matrix h, helper matrices e and f and a
+        // Create scoring matrix h, helper matrix f and a
         // helper matrix p that tracks the previous index
 
         let mut h = vec![0; size];
-        let mut e = vec![0; size];
         let mut f = vec![0; size];
         let mut p = vec![0; size];
 
         // Perform scoring stage (dynamic programming-style)
 
         for i in 1..=n {
+            // We don't need to store e as a matrix since we iterate
+            // from left to right (thus we only need the last value)
+            let mut e_here: i16 = 0;
+
             for j in 1..=m {
                 // Compute indices for the neighboring cells
                 let here = i * width + j;
@@ -45,7 +48,7 @@ impl Engine for NaiveEngine {
                 let above_left = (i - 1) * width + j - 1;
 
                 // Compute helper values
-                e[here] = (e[left] - G_EXT).max(h[left] - G_INIT);
+                e_here = (e_here - G_EXT).max(h[left] - G_INIT);
                 f[here] = (f[above] - G_EXT).max(h[above] - G_INIT);
 
                 // Compute value and the remember the index the maximum came from
@@ -53,7 +56,7 @@ impl Engine for NaiveEngine {
                 let (max_origin, max_value) = [
                     (0,          0),
                     (above_left, h[above_left] + Self::weight(database[i - 1], query[j - 1])),
-                    (left,       e[here]),
+                    (left,       e_here),
                     (above,      f[here]),
                 ].into_iter().max_by_key(|&(_, x)| x).unwrap();
                 

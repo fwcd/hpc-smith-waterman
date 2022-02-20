@@ -6,7 +6,6 @@ __kernel void smith_waterman_naive(
     __global uchar *database,
     __global uchar *query,
     __global short *h,
-    __global short *e,
     __global short *f,
     __global uint *p
 ) {
@@ -15,6 +14,8 @@ __kernel void smith_waterman_naive(
     uint width = m + 1;
 
     for (uint i = 0; i < n; i++) {
+        short e_here = 0;
+
         for (uint j = 0; j < m; j++) {
             // Compute indices of the neighboring cells
             uint here = i * width + j;
@@ -23,10 +24,9 @@ __kernel void smith_waterman_naive(
             uint above_left = (i - 1) * width + j - 1;
 
             // Compute helper values
-            short e_here = max(e[left] - G_EXT, h[left] - G_INIT);
+            e_here = max(e_here - G_EXT, h[left] - G_INIT);
             short f_here = max(f[above] - G_EXT, h[above] - G_INIT);
 
-            e[here] = e_here;
             f[here] = f_here;
 
             // Compute value and remember the index the maximum came from
