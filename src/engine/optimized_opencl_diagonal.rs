@@ -137,12 +137,12 @@ impl Engine for OptimizedOpenCLDiagonalEngine {
             }
 
             // Update the kernel
-            kernel.set_arg("offset", offset).unwrap();
-            kernel.set_arg("lower", lower).unwrap();
-            kernel.set_arg("lower_padding", lower_padding).unwrap();
-            kernel.set_arg("previous_size", previous_size).unwrap();
-            kernel.set_arg("previous_previous_size", previous_previous_size).unwrap();
-            kernel.set_arg("steps_since_in_bottom_part", steps_since_in_bottom_part).unwrap();
+            kernel.set_arg("offset", offset as u32).unwrap();
+            kernel.set_arg("lower", lower as u32).unwrap();
+            kernel.set_arg("lower_padding", lower_padding as u32).unwrap();
+            kernel.set_arg("previous_size", previous_size as u32).unwrap();
+            kernel.set_arg("previous_previous_size", previous_previous_size as u32).unwrap();
+            kernel.set_arg("steps_since_in_bottom_part", steps_since_in_bottom_part as u32).unwrap();
             kernel.set_default_global_work_offset((k, 0).into());
             kernel.set_default_global_work_size((1, inner_size).into());
 
