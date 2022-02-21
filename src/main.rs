@@ -8,7 +8,7 @@ use clap::Parser;
 use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}};
 use rayon::prelude::*;
 
-use engine::{NaiveEngine, Engine, DiagonalEngine};
+use engine::{NaiveEngine, Engine, DiagonalEngine, OptimizedDiagonalEngine};
 use fasta::FastaReader;
 use metrics::Metrics;
 use model::{Sequence, AlignedPair};
@@ -79,6 +79,10 @@ struct Args {
     #[clap(long)]
     diagonal: bool,
 
+    /// Whether to benchmark the cache-optimized diagonal (CPU) engine.
+    #[clap(long)]
+    optimized_diagonal: bool,
+
     /// Whether to benchmark the diagonal OpenCL (GPU) engine.
     #[clap(long)]
     opencl_diagonal: bool,
@@ -99,6 +103,7 @@ fn main() {
     // Create engines
     let naive_engine = NaiveEngine;
     let diagonal_engine = DiagonalEngine;
+    let optimized_diagonal_engine = OptimizedDiagonalEngine;
     let opencl_diagonal_engine = OpenCLDiagonalEngine::new(args.gpu_index);
 
     // Run short demo if --demo is set
@@ -124,6 +129,11 @@ fn main() {
     // Benchmark the diagonal (CPU) engine
     if args.diagonal || default {
         asserter.feed("diagonal parallel", bench_parallel(&diagonal_engine, &database, &queries));
+    }
+
+    // Benchmark the cache-optimized diagonal (CPU) engine
+    if args.optimized_diagonal || default {
+        asserter.feed("optimized diagonal parallel", bench_parallel(&optimized_diagonal_engine, &database, &queries));
     }
 
     // Benchmark the OpenCL diagonal (GPU) engine
