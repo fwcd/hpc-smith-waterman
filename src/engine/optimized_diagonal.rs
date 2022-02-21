@@ -64,7 +64,7 @@ impl Engine for OptimizedDiagonalEngine {
 
         let mut previous_previous_size = 1;
         let mut previous_size = 2;
-        let mut offset = 4; // We skip the first two diagonals, see below
+        let mut offset = 3; // We skip the first two diagonals, see below
 
         // We start at 2 since the first interesting (non-border)
         // diagonal starts at i = 2 (going rightwards upwards).
@@ -91,7 +91,7 @@ impl Engine for OptimizedDiagonalEngine {
                 // of the cell above by subtracting the size
                 // of it's (i.e. the previous) diagonal. The
                 // other equations are derived from this idea.
-                let here = offset + l;
+                let here = offset + j;
                 let above = here - previous_size;
                 let left = above - 1;
                 let above_left = left - previous_previous_size;
