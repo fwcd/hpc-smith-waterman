@@ -89,10 +89,12 @@ impl Engine for OpenCLDiagonalEngine {
             .build()
             .unwrap();
 
+        // We start at 2 since the first interesting (non-border)
+        // diagonal starts at i = 2 (going rightwards upwards).
         for k in 2..=(n + m) {
             // The lower and upper bounds for the diagonal
             // Derived from rearranging the equations
-            // `k - j < height` and `j < width` (our base range is `1..k`).
+            // `k - j = i < height` and `j < width` (our base range is `1..k`).
             let lower = (k as isize - height as isize + 1).max(1) as usize;
             let upper = k.min(width);
 
