@@ -83,14 +83,12 @@ impl Engine for OptimizedDiagonalEngine {
             let inner_size = upper - lower;
             let outer_size = outer_upper - outer_lower;
             let lower_padding = lower - outer_lower;
-            let upper_padding = outer_upper - upper;
 
             if outer_lower > 0 {
                 steps_since_in_bottom_part += 1;
             }
 
             // Write index mappings.
-            // TODO: Use par_iter
             (0..outer_size).into_par_iter().for_each(|l| {
                 let j = lower + l;
                 let i = k - j;
@@ -103,8 +101,7 @@ impl Engine for OptimizedDiagonalEngine {
             });
 
             // Iterate the diagonal in parallel
-            // TODO: Use par_iter
-            (0..inner_size).into_iter().for_each(|l| {
+            (0..inner_size).into_par_iter().for_each(|l| {
                 // Compute the 'actual'/'logical' position in the matrix.
                 // We need this to index into the query/database sequence,
                 // although we use our diagonal-major/cache-optimized
@@ -137,10 +134,6 @@ impl Engine for OptimizedDiagonalEngine {
                 }
             });
 
-            unsafe {
-                println!("diag: {:?}", &ph.slice()[(offset + lower_padding)..(offset + outer_size - (outer_upper - upper))]);
-            }
-
             // Store current values as previous
             previous_previous_size = previous_size;
             previous_size = outer_size;
@@ -149,12 +142,12 @@ impl Engine for OptimizedDiagonalEngine {
             offset += outer_size;
         }
 
-        // DEBUG
-        println!("{}", crate::utils::pretty_matrix(&h, width));
-
         metrics.lock().unwrap().record_cell_updates(4 * size);
 
         // Perform traceback stage (using the previously computed scoring matrix h)
+        // Note that since this returns the last maximum, we may get a different
+        // (but equivalently good) solution than the simple diagonal engine if there
+        // is more than one maximum.
 
         let mut i = (0..size).max_by_key(|&i| h[i]).unwrap();
         let mut database_indices = Vec::new();

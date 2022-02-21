@@ -54,12 +54,8 @@ impl Engine for DiagonalEngine {
             let lower = (k as isize - height as isize + 1).max(1) as usize;
             let upper = k.min(width);
 
-            // DEBUG
-            let mut debug_diag = Vec::new();
-
             // Iterate the diagonal in parallel
-            // TODO: par_iter
-            (lower..upper).into_iter().for_each(|j| {
+            (lower..upper).into_par_iter().for_each(|j| {
                 let i = k - j;
 
                 // Compute indices of the neighboring cells
@@ -84,15 +80,9 @@ impl Engine for DiagonalEngine {
                     
                     ph.write(here, max_value);
                     pp.write(here, max_origin);
-
-                    debug_diag.push(max_value);
                 }
             });
-            println!("diag: {:?}", debug_diag);
         }
-
-        // DEBUG
-        println!("{}", crate::utils::pretty_matrix(&h, width));
 
         metrics.lock().unwrap().record_cell_updates(4 * size);
 

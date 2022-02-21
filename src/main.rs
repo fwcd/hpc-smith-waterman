@@ -121,7 +121,13 @@ fn main() {
     let mut reader = FastaReader::new(BufReader::new(file));
     let database = reader.next().unwrap();
     let queries = reader.take(args.number).collect();
+
+    // Use asserters to verify that engines yield the same result.
+    // Note that the optimized diagonal engines use a different
+    // asserter since they may yield different solutions during
+    // the traceback stage if there are multiple (equivalent) maximums.
     let mut asserter = EqualAsserter::new();
+    let mut optimized_asserter = EqualAsserter::new();
 
     // Benchmark the naive (CPU) engine
     if args.naive || default {
@@ -136,7 +142,7 @@ fn main() {
 
     // Benchmark the cache-optimized diagonal (CPU) engine
     if args.optimized_diagonal || default {
-        asserter.feed("optimized diagonal parallel", bench_parallel(&optimized_diagonal_engine, &database, &queries));
+        optimized_asserter.feed("optimized diagonal parallel", bench_parallel(&optimized_diagonal_engine, &database, &queries));
     }
 
     // Benchmark the OpenCL diagonal (GPU) engine
