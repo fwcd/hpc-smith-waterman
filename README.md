@@ -78,3 +78,85 @@ While the benchmarks already parallelize over the examples using CPU threads, th
 - The GPU engines generally only outperform the CPU engines on large sequences (since those let us parallelize the kernel well due to lots of diagonals)
 - Additionally, there is overhead to using OpenCL (e.g. configuring kernels, queueing them, etc.), which makes the CPU variants often faster when benchmarking lots of short sequences
 - The naive CPU variant is already pretty fast due to good cache coherency (we iterate the matrix in a natural way, the inner loop visits adjacent elements)
+
+## Example Results
+
+Example benchmark results on the Apple M1 Pro:
+
+## Lots of short-ish sequences
+
+```
+$ hpc-smith-waterman bench -n 10000
+┌──────────────────────────┐
+│ Naive (CPU) (sequential) │
+└──────────────────────────┘
+Elapsed: 9.79s
+Giga-CUPS: 0.38
+Pairs: 10000
+┌────────────────────────┐
+│ Naive (CPU) (parallel) │
+└────────────────────────┘
+Elapsed: 1.59s
+Giga-CUPS: 2.34
+Pairs: 10000
+┌───────────────────────────┐
+│ Diagonal (CPU) (parallel) │
+└───────────────────────────┘
+Elapsed: 4.79s
+Giga-CUPS: 0.78
+Pairs: 10000
+┌─────────────────────────────────────┐
+│ Optimized Diagonal (CPU) (parallel) │
+└─────────────────────────────────────┘
+Elapsed: 3.38s
+Giga-CUPS: 1.10
+Pairs: 10000
+┌────────────────────────────────────────────────┐
+│ OpenCL Diagonal (GPU: Apple M1 Pro) (parallel) │
+└────────────────────────────────────────────────┘
+Elapsed: 14.75s
+Giga-CUPS: 0.25
+Pairs: 10000
+┌──────────────────────────────────────────────────────────┐
+│ Optimized OpenCL Diagonal (GPU: Apple M1 Pro) (parallel) │
+└──────────────────────────────────────────────────────────┘
+Elapsed: 19.68s
+Giga-CUPS: 0.19
+Pairs: 10000
+```
+
+Observation: CPU variants outperform GPU variants by quite a bit.
+
+## Few, very large sequences
+
+> We exclude the naive engine since it's too slow.
+
+```
+$ hpc-smith-waterman bench --diagonal --opencl-diagonal --optimized-diagonal --optimized-opencl-diagonal -n 5 -r 36
+┌───────────────────────────┐
+│ Diagonal (CPU) (parallel) │
+└───────────────────────────┘
+Elapsed: 10.71s
+Giga-CUPS: 0.18
+Pairs: 5
+┌─────────────────────────────────────┐
+│ Optimized Diagonal (CPU) (parallel) │
+└─────────────────────────────────────┘
+Elapsed: 4.90s
+Giga-CUPS: 0.39
+Pairs: 5
+┌────────────────────────────────────────────────┐
+│ OpenCL Diagonal (GPU: Apple M1 Pro) (parallel) │
+└────────────────────────────────────────────────┘
+Elapsed: 7.46s
+Giga-CUPS: 0.25
+Pairs: 5
+┌──────────────────────────────────────────────────────────┐
+│ Optimized OpenCL Diagonal (GPU: Apple M1 Pro) (parallel) │
+└──────────────────────────────────────────────────────────┘
+Elapsed: 2.14s
+Giga-CUPS: 0.89
+Pairs: 5
+```
+
+Observation: The GPU is good at crunching large matrices with lots of diagonal in parallel.
