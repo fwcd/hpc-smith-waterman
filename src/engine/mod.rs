@@ -1,14 +1,16 @@
 mod constants;
 mod naive;
 mod diagonal;
-mod optimized_diagonal;
 mod opencl_diagonal;
+mod optimized_diagonal;
+mod optimized_opencl_diagonal;
 
 pub use constants::*;
 pub use naive::*;
 pub use diagonal::*;
-pub use optimized_diagonal::*;
 pub use opencl_diagonal::*;
+pub use optimized_diagonal::*;
+pub use optimized_opencl_diagonal::*;
 
 use std::sync::{Arc, Mutex};
 

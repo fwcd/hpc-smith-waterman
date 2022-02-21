@@ -8,7 +8,7 @@ use clap::Parser;
 use std::{io::{BufReader, self, Write}, fs::File, sync::{Mutex, Arc}};
 use rayon::prelude::*;
 
-use engine::{NaiveEngine, Engine, DiagonalEngine, OptimizedDiagonalEngine};
+use engine::{NaiveEngine, Engine, DiagonalEngine, OptimizedDiagonalEngine, OptimizedOpenCLDiagonalEngine};
 use fasta::FastaReader;
 use metrics::Metrics;
 use model::{Sequence, AlignedPair};
@@ -87,6 +87,10 @@ struct Args {
     #[clap(long)]
     opencl_diagonal: bool,
 
+    /// Whether to benchmark the cache-optimized diagonal OpenCL (GPU) engine.
+    #[clap(long)]
+    optimized_opencl_diagonal: bool,
+
     /// The index of the GPU to use for the OpenCL engine.
     #[clap(long, default_value_t = 0)]
     gpu_index: usize,
@@ -98,13 +102,16 @@ fn main() {
     let default = !args.demo
         && !args.naive
         && !args.diagonal
-        && !args.opencl_diagonal;
+        && !args.optimized_diagonal
+        && !args.opencl_diagonal
+        && !args.optimized_opencl_diagonal;
 
     // Create engines
     let naive_engine = NaiveEngine;
     let diagonal_engine = DiagonalEngine;
     let optimized_diagonal_engine = OptimizedDiagonalEngine;
     let opencl_diagonal_engine = OpenCLDiagonalEngine::new(args.gpu_index);
+    let optimized_opencl_diagonal_engine = OptimizedOpenCLDiagonalEngine::new(args.gpu_index);
 
     // Run short demo if --demo is set
     if args.demo || default {
@@ -148,5 +155,10 @@ fn main() {
     // Benchmark the OpenCL diagonal (GPU) engine
     if args.opencl_diagonal || default {
         asserter.feed(bench_parallel(&opencl_diagonal_engine, &database, &queries));
+    }
+
+    // Benchmark the cache-optimized OpenCL diagonal (GPU) engine
+    if args.optimized_opencl_diagonal || default {
+        optimized_asserter.feed(bench_parallel(&optimized_opencl_diagonal_engine, &database, &queries));
     }
 }
