@@ -119,8 +119,8 @@ fn main() {
         // let demo_query = "GGTTGACTA".parse().unwrap();
         let demo_database = "HSDLGWKFTPL".parse().unwrap();
         let demo_query = "SLTTTPSLTTTPPTSLG".parse().unwrap();
-        run(&diagonal_engine, &demo_database, &demo_query);
         run(&optimized_diagonal_engine, &demo_database, &demo_query);
+        run(&optimized_opencl_diagonal_engine, &demo_database, &demo_query);
     }
 
     // Read a subset of the sequences from the downloaded dataset

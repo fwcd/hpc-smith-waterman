@@ -62,10 +62,10 @@ impl Engine for OptimizedDiagonalEngine {
         //     \ k = 0 / \     k = 1     / \         k = 2
         //
 
-        let mut previous_previous_size = 1;
-        let mut previous_size = 2;
-        let mut steps_since_in_bottom_part = 0;
-        let mut offset = 3; // We skip the first two diagonals, see below
+        let mut previous_previous_size: usize = 1;
+        let mut previous_size: usize = 2;
+        let mut steps_since_in_bottom_part: usize = 0;
+        let mut offset: usize = 3; // We skip the first two diagonals, see below
 
         // We start at 2 since the first interesting (non-border)
         // diagonal starts at i = 2 (going rightwards upwards).
