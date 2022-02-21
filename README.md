@@ -83,7 +83,7 @@ While the benchmarks already parallelize over the examples using CPU threads, th
 
 Example benchmark results on the Apple M1 Pro:
 
-## Lots of short-ish sequences
+### Lots of short-ish sequences
 
 ```
 $ hpc-smith-waterman bench -n 10000
@@ -127,7 +127,7 @@ Pairs: 10000
 
 Observation: CPU variants outperform GPU variants by quite a bit.
 
-## Few, very large sequences
+### Few, very large sequences
 
 > We exclude the naive engine since it's too slow.
 
