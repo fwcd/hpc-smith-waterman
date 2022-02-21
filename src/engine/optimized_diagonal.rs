@@ -64,21 +64,34 @@ impl Engine for OptimizedDiagonalEngine {
 
         let mut previous_previous_size = 1;
         let mut previous_size = 2;
+        let mut steps_since_in_bottom_part = 0;
         let mut offset = 3; // We skip the first two diagonals, see below
 
         // We start at 2 since the first interesting (non-border)
         // diagonal starts at i = 2 (going rightwards upwards).
         for k in 2..=(n + m) {
-            // The lower and upper bounds for the diagonal
+            // The lower and upper bounds for the diagonal('s j index)
             // Derived from rearranging the equations
             // `k - j = i < height` and `j < width` (our base range is `1..k`).
+            // The outer range represent the entire j-range of the diagonal
+            // whereas the inner range excludes the topmost row and the leftmost
+            // column.
+            let outer_lower = (k as isize - height as isize + 1).max(0) as usize;
+            let outer_upper = (k + 1).min(width);
             let lower = (k as isize - height as isize + 1).max(1) as usize;
             let upper = k.min(width);
-            let size = upper - lower;
+            let inner_size = upper - lower;
+            let outer_size = outer_upper - outer_lower;
+            println!("k = {} ({}..{} vs {}..{}, outer: {}), stage: {}", k, lower, upper, outer_lower, outer_upper, outer_size, steps_since_in_bottom_part);
+            let padding = lower - outer_lower;
+
+            if outer_lower > 0 {
+                steps_since_in_bottom_part += 1;
+            }
 
             // Iterate the diagonal in parallel
             // TODO: Use par_iter
-            (0..size).into_iter().for_each(|l| {
+            (0..inner_size).into_iter().for_each(|l| {
                 // Compute the 'actual'/'logical' position in the matrix.
                 // We need this to index into the query/database sequence,
                 // although we use our diagonal-major/cache-optimized
@@ -87,15 +100,11 @@ impl Engine for OptimizedDiagonalEngine {
                 let i = k - j;
 
                 // Compute indices of the neighboring cells.
-                // The trick here is that we get the index
-                // of the cell above by subtracting the size
-                // of it's (i.e. the previous) diagonal. The
-                // other equations are derived from this idea.
-                let here = offset + j;
-                let above = here - previous_size;
+                let here = offset + l + padding;
+                let above = here - previous_size + if steps_since_in_bottom_part > 0 { 1 } else { 0 };
                 let left = above - 1;
-                let above_left = left - previous_previous_size;
-
+                let above_left = left - previous_previous_size + if steps_since_in_bottom_part > 1 { 1 } else { 0 };
+                
                 unsafe {
                     // Write index mappings.
                     pis.write(here, i);
@@ -119,12 +128,16 @@ impl Engine for OptimizedDiagonalEngine {
                 }
             });
 
+            unsafe {
+                println!("diag: {:?}", &ph.slice()[offset..(offset + outer_size)]);
+            }
+
             // Store current values as previous
             previous_previous_size = previous_size;
-            previous_size = size;
+            previous_size = outer_size;
 
             // Move offset
-            offset += size;
+            offset += outer_size;
         }
 
         // DEBUG
