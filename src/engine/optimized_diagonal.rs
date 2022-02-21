@@ -82,7 +82,8 @@ impl Engine for OptimizedDiagonalEngine {
             let upper = k.min(width);
             let inner_size = upper - lower;
             let outer_size = outer_upper - outer_lower;
-            println!("k = {} ({}..{} vs {}..{}, outer: {}), stage: {}", k, lower, upper, outer_lower, outer_upper, outer_size, steps_since_in_bottom_part);
+            // DEBUG
+            // println!("k = {} ({}..{} vs {}..{}, outer: {}), stage: {}", k, lower, upper, outer_lower, outer_upper, outer_size, steps_since_in_bottom_part);
             let padding = lower - outer_lower;
 
             if outer_lower > 0 {
@@ -129,7 +130,7 @@ impl Engine for OptimizedDiagonalEngine {
             });
 
             unsafe {
-                println!("diag: {:?}", &ph.slice()[offset..(offset + outer_size)]);
+                println!("diag: {:?}", &ph.slice()[(offset + padding)..(offset + outer_size - (outer_upper - upper))]);
             }
 
             // Store current values as previous
@@ -142,11 +143,6 @@ impl Engine for OptimizedDiagonalEngine {
 
         // DEBUG
         println!("{}", crate::utils::pretty_matrix(&h, width));
-        let mut visited = vec![0; size];
-        for (i, j) in is.iter().zip(js.iter()) {
-            visited[i * width + j] += 1;
-        }
-        println!("{}", crate::utils::pretty_matrix(&visited, width));
 
         metrics.lock().unwrap().record_cell_updates(4 * size);
 

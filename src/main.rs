@@ -108,8 +108,10 @@ fn main() {
 
     // Run short demo if --demo is set
     if args.demo || default {
-        let demo_database = "TGTTACGG".parse().unwrap();
-        let demo_query = "GGTTGACTA".parse().unwrap();
+        // let demo_database = "TGTTACGG".parse().unwrap();
+        // let demo_query = "GGTTGACTA".parse().unwrap();
+        let demo_database = "HSDLGWKFTPL".parse().unwrap();
+        let demo_query = "SLTTTPSLTTTPPTSLG".parse().unwrap();
         run(&diagonal_engine, &demo_database, &demo_query);
         run(&optimized_diagonal_engine, &demo_database, &demo_query);
     }
