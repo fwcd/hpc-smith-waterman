@@ -131,22 +131,22 @@ fn main() {
 
     // Benchmark the naive (CPU) engine
     if args.naive || default {
-        asserter.feed("naive sequential", bench_sequential(&naive_engine, &database, &queries));
-        asserter.feed("naive parallel", bench_parallel(&naive_engine, &database, &queries));
+        asserter.feed(bench_sequential(&naive_engine, &database, &queries));
+        asserter.feed(bench_parallel(&naive_engine, &database, &queries));
     }
 
     // Benchmark the diagonal (CPU) engine
     if args.diagonal || default {
-        asserter.feed("diagonal parallel", bench_parallel(&diagonal_engine, &database, &queries));
+        asserter.feed(bench_parallel(&diagonal_engine, &database, &queries));
     }
 
     // Benchmark the cache-optimized diagonal (CPU) engine
     if args.optimized_diagonal || default {
-        optimized_asserter.feed("optimized diagonal parallel", bench_parallel(&optimized_diagonal_engine, &database, &queries));
+        optimized_asserter.feed(bench_parallel(&optimized_diagonal_engine, &database, &queries));
     }
 
     // Benchmark the OpenCL diagonal (GPU) engine
     if args.opencl_diagonal || default {
-        asserter.feed("opencl diagonal parallel", bench_parallel(&opencl_diagonal_engine, &database, &queries));
+        asserter.feed(bench_parallel(&opencl_diagonal_engine, &database, &queries));
     }
 }

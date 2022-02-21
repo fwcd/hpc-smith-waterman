@@ -13,9 +13,9 @@ impl<T> EqualAsserter<T> where T: Debug + Eq {
         Self { first: None }
     }
 
-    pub fn feed(&mut self, name: &str, value: T) {
+    pub fn feed(&mut self, value: T) {
         if let Some(ref first) = self.first {
-            assert_eq!(first, &value, "{} did not produce the correct result", name.to_string());
+            assert_eq!(first, &value);
         } else {
             self.first = Some(value);
         }
