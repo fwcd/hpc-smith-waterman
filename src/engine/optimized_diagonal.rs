@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use rayon::prelude::*;
+use rayon::{prelude::*, scope};
 
 use crate::{model::{Sequence, AlignedPair, AlignedSequence}, metrics::Metrics, utils::UnsafeSlice};
 
@@ -67,80 +67,84 @@ impl Engine for OptimizedDiagonalEngine {
         let mut steps_since_in_bottom_part = 0;
         let mut offset = 3; // We skip the first two diagonals, see below
 
-        // We start at 2 since the first interesting (non-border)
-        // diagonal starts at i = 2 (going rightwards upwards).
-        for k in 2..=(n + m) {
-            // The lower and upper bounds for the diagonal('s j index)
-            // Derived from rearranging the equations
-            // `k - j = i < height` and `j < width` (our base range is `1..k`).
-            // The outer range represent the entire j-range of the diagonal
-            // whereas the inner range excludes the topmost row and the leftmost
-            // column.
-            let outer_lower = (k as isize - height as isize + 1).max(0) as usize;
-            let outer_upper = (k + 1).min(width);
-            let lower = (k as isize - height as isize + 1).max(1) as usize;
-            let upper = k.min(width);
-            let inner_size = upper - lower;
-            let outer_size = outer_upper - outer_lower;
-            let lower_padding = lower - outer_lower;
+        scope(|s| {
+            // We start at 2 since the first interesting (non-border)
+            // diagonal starts at i = 2 (going rightwards upwards).
+            for k in 2..=(n + m) {
+                // The lower and upper bounds for the diagonal('s j index)
+                // Derived from rearranging the equations
+                // `k - j = i < height` and `j < width` (our base range is `1..k`).
+                // The outer range represent the entire j-range of the diagonal
+                // whereas the inner range excludes the topmost row and the leftmost
+                // column.
+                let outer_lower = (k as isize - height as isize + 1).max(0) as usize;
+                let outer_upper = (k + 1).min(width);
+                let lower = (k as isize - height as isize + 1).max(1) as usize;
+                let upper = k.min(width);
+                let inner_size = upper - lower;
+                let outer_size = outer_upper - outer_lower;
+                let lower_padding = lower - outer_lower;
 
-            if outer_lower > 0 {
-                steps_since_in_bottom_part += 1;
-            }
-
-            // Write index mappings.
-            (0..outer_size).into_par_iter().for_each(|l| {
-                let j = lower + l;
-                let i = k - j;
-                let here = offset + l;
-
-                unsafe {
-                    pis.write(here, i);
-                    pjs.write(here, j);
+                if outer_lower > 0 {
+                    steps_since_in_bottom_part += 1;
                 }
-            });
 
-            // Iterate the diagonal in parallel
-            (0..inner_size).into_par_iter().for_each(|l| {
-                // Compute the 'actual'/'logical' position in the matrix.
-                // We need this to index into the query/database sequence,
-                // although we use our diagonal-major/cache-optimized
-                // indexing scheme for the matrices instead.
-                let j = lower + l;
-                let i = k - j;
+                // Write index mappings asynchronously.
+                s.spawn(move |_| {
+                    (0..outer_size).into_par_iter().for_each(|l| {
+                        let j = lower + l;
+                        let i = k - j;
+                        let here = offset + l;
 
-                // Compute indices of the neighboring cells.
-                let here = offset + lower_padding + l;
-                let above = here - previous_size + if steps_since_in_bottom_part > 0 { 1 } else { 0 };
-                let left = above - 1;
-                let above_left = left - previous_previous_size + if steps_since_in_bottom_part > 1 { 1 } else { 0 };
-                
-                unsafe {
-                    // Compute helper values
-                    pe.write(here, (pe.read(left) - G_EXT).max(ph.read(left) - G_INIT));
-                    pf.write(here, (pf.read(above) - G_EXT).max(ph.read(above) - G_INIT));
+                        unsafe {
+                            pis.write(here, i);
+                            pjs.write(here, j);
+                        }
+                    });
+                });
 
-                    // Compute value and remember the index the maximum came from
-                    // (we need this later for the traceback phase)
-                    let (max_origin, max_value) = [
-                        (0,          0),
-                        (above_left, ph.read(above_left) + Self::weight(database[i - 1], query[j - 1])),
-                        (left,       pe.read(here)),
-                        (above,      pf.read(here)),
-                    ].into_iter().max_by_key(|&(_, x)| x).unwrap();
+                // Iterate the diagonal in parallel
+                (0..inner_size).into_par_iter().for_each(|l| {
+                    // Compute the 'actual'/'logical' position in the matrix.
+                    // We need this to index into the query/database sequence,
+                    // although we use our diagonal-major/cache-optimized
+                    // indexing scheme for the matrices instead.
+                    let j = lower + l;
+                    let i = k - j;
+
+                    // Compute indices of the neighboring cells.
+                    let here = offset + lower_padding + l;
+                    let above = here - previous_size + if steps_since_in_bottom_part > 0 { 1 } else { 0 };
+                    let left = above - 1;
+                    let above_left = left - previous_previous_size + if steps_since_in_bottom_part > 1 { 1 } else { 0 };
                     
-                    ph.write(here, max_value);
-                    pp.write(here, max_origin);
-                }
-            });
+                    unsafe {
+                        // Compute helper values
+                        pe.write(here, (pe.read(left) - G_EXT).max(ph.read(left) - G_INIT));
+                        pf.write(here, (pf.read(above) - G_EXT).max(ph.read(above) - G_INIT));
 
-            // Store current values as previous
-            previous_previous_size = previous_size;
-            previous_size = outer_size;
+                        // Compute value and remember the index the maximum came from
+                        // (we need this later for the traceback phase)
+                        let (max_origin, max_value) = [
+                            (0,          0),
+                            (above_left, ph.read(above_left) + Self::weight(database[i - 1], query[j - 1])),
+                            (left,       pe.read(here)),
+                            (above,      pf.read(here)),
+                        ].into_iter().max_by_key(|&(_, x)| x).unwrap();
+                        
+                        ph.write(here, max_value);
+                        pp.write(here, max_origin);
+                    }
+                });
 
-            // Move offset
-            offset += outer_size;
-        }
+                // Store current values as previous
+                previous_previous_size = previous_size;
+                previous_size = outer_size;
+
+                // Move offset
+                offset += outer_size;
+            }
+        });
 
         metrics.lock().unwrap().record_cell_updates(4 * size);
 
