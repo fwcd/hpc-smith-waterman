@@ -129,6 +129,11 @@ impl Engine for OptimizedDiagonalEngine {
 
         // DEBUG
         println!("{}", crate::utils::pretty_matrix(&h, width));
+        let mut visited = vec![0; size];
+        for (i, j) in is.iter().zip(js.iter()) {
+            visited[i * width + j] += 1;
+        }
+        println!("{}", crate::utils::pretty_matrix(&visited, width));
 
         metrics.lock().unwrap().record_cell_updates(4 * size);
 
