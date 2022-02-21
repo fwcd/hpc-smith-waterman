@@ -61,6 +61,10 @@ fn bench_parallel<'a>(engine: &(impl Engine + Sync), database: &'a Sequence, que
 struct Cli {
     #[clap(subcommand)]
     command: Command,
+
+    /// The index of the GPU to use (for OpenCL).
+    #[clap(short, long)]
+    gpu_index: usize,
 }
 
 #[derive(Subcommand)]
@@ -110,20 +114,6 @@ enum Command {
     },
 }
 
-#[derive(Parser, Debug)]
-#[clap(version, about)]
-struct Args {
-    /// Whether to run a short demo before the actual benchmarks.
-    #[clap(short, long)]
-    demo: bool,
-
-    
-
-    /// The index of the GPU to use for the OpenCL engine.
-    #[clap(long, default_value_t = 0)]
-    gpu_index: usize,
-}
-
 fn main() {
     // Parse CLI args
     let cli = Cli::parse();
@@ -132,8 +122,8 @@ fn main() {
     let naive_engine = NaiveEngine;
     let diagonal_engine = DiagonalEngine;
     let optimized_diagonal_engine = OptimizedDiagonalEngine;
-    let opencl_diagonal_engine = OpenCLDiagonalEngine::new(0);
-    let optimized_opencl_diagonal_engine = OptimizedOpenCLDiagonalEngine::new(0);
+    let opencl_diagonal_engine = OpenCLDiagonalEngine::new(cli.gpu_index);
+    let optimized_opencl_diagonal_engine = OptimizedOpenCLDiagonalEngine::new(cli.gpu_index);
 
     match cli.command {
         Command::Run { database, query } => {
