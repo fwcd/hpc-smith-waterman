@@ -8,6 +8,7 @@ out_zip="$out_dir/hpc-smith-waterman.zip"
 
 echo "==> Zipping repo..."
 mkdir -p $out_dir
-git archive -o "$out_zip" HEAD
+rm -f "$out_zip"
+zip -vr "$out_zip" bin/ scripts/ src/ .editorconfig .gitignore Cargo.lock Cargo.toml README.md
 
 echo "==> Zipped to $out_zip"
