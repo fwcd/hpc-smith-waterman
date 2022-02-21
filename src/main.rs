@@ -63,7 +63,7 @@ struct Cli {
     command: Command,
 
     /// The index of the GPU to use (for OpenCL).
-    #[clap(short, long)]
+    #[clap(short, long, default_value_t = 0)]
     gpu_index: usize,
 }
 
