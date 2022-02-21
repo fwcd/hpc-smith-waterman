@@ -70,3 +70,11 @@ If you have multiple GPUs installed, you can choose the GPU for OpenCL using `--
 ```
 hpc-smith-waterman --gpu-index 1 bench --opencl-diagonal
 ```
+
+## Performance Considerations
+
+While the benchmarks already parallelize over the examples using CPU threads, there are some observations to keep in mind:
+
+- The GPU engines generally only outperform the CPU engines on large sequences (since those let us parallelize the kernel well due to lots of diagonals)
+- Additionally, there is overhead to using OpenCL (e.g. configuring kernels, queueing them, etc.), which makes the CPU variants often faster when benchmarking lots of short sequences
+- The naive CPU variant is already pretty fast due to good cache coherency (we iterate the matrix in a natural way, the inner loop visits adjacent elements)
