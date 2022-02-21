@@ -1,21 +1,21 @@
 use std::{fmt, ops::Index, str::FromStr};
 
 /// A (named) nucleid sequence.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Sequence {
     pub name: String,
     pub raw: Vec<u8>,
 }
 
 /// An alignment on a nucleid sequence.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct AlignedSequence<'a> {
     pub sequence: &'a Sequence,
     pub indices: Vec<usize>,
 }
 
 /// An alignment of two sequences.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct AlignedPair<'a> {
     pub database: AlignedSequence<'a>,
     pub query: AlignedSequence<'a>,
@@ -29,6 +29,12 @@ impl Sequence {
     /// The length of the sequence.
     pub fn len(&self) -> usize {
         self.raw.len()
+    }
+
+    /// Cycles the sequence n times.
+    pub fn cycle(self, n: usize) -> Self {
+        let len = self.len();
+        Self { name: self.name, raw: self.raw.into_iter().cycle().take(n * len).collect() }
     }
 }
 
