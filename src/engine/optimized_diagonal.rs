@@ -82,13 +82,25 @@ impl Engine for OptimizedDiagonalEngine {
             let upper = k.min(width);
             let inner_size = upper - lower;
             let outer_size = outer_upper - outer_lower;
-            // DEBUG
-            // println!("k = {} ({}..{} vs {}..{}, outer: {}), stage: {}", k, lower, upper, outer_lower, outer_upper, outer_size, steps_since_in_bottom_part);
-            let padding = lower - outer_lower;
+            let lower_padding = lower - outer_lower;
+            let upper_padding = outer_upper - upper;
 
             if outer_lower > 0 {
                 steps_since_in_bottom_part += 1;
             }
+
+            // Write index mappings.
+            // TODO: Use par_iter
+            (0..outer_size).into_par_iter().for_each(|l| {
+                let j = lower + l;
+                let i = k - j;
+                let here = offset + l;
+
+                unsafe {
+                    pis.write(here, i);
+                    pjs.write(here, j);
+                }
+            });
 
             // Iterate the diagonal in parallel
             // TODO: Use par_iter
@@ -101,16 +113,12 @@ impl Engine for OptimizedDiagonalEngine {
                 let i = k - j;
 
                 // Compute indices of the neighboring cells.
-                let here = offset + l + padding;
+                let here = offset + lower_padding + l;
                 let above = here - previous_size + if steps_since_in_bottom_part > 0 { 1 } else { 0 };
                 let left = above - 1;
                 let above_left = left - previous_previous_size + if steps_since_in_bottom_part > 1 { 1 } else { 0 };
                 
                 unsafe {
-                    // Write index mappings.
-                    pis.write(here, i);
-                    pjs.write(here, j);
-
                     // Compute helper values
                     pe.write(here, (pe.read(left) - G_EXT).max(ph.read(left) - G_INIT));
                     pf.write(here, (pf.read(above) - G_EXT).max(ph.read(above) - G_INIT));
@@ -130,7 +138,7 @@ impl Engine for OptimizedDiagonalEngine {
             });
 
             unsafe {
-                println!("diag: {:?}", &ph.slice()[(offset + padding)..(offset + outer_size - (outer_upper - upper))]);
+                println!("diag: {:?}", &ph.slice()[(offset + lower_padding)..(offset + outer_size - (outer_upper - upper))]);
             }
 
             // Store current values as previous
