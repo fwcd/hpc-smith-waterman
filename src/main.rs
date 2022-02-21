@@ -173,7 +173,7 @@ fn main() {
             }
 
             // Benchmark the cache-optimized OpenCL diagonal (GPU) engine
-            if optimized_opencl_diagonal || default {
+            if optimized_opencl_diagonal {
                 optimized_asserter.feed(bench_parallel(&optimized_opencl_diagonal_engine, &database, &queries));
             }
         },
