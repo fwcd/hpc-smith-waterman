@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+cd "$(dirname $0)/.."
+
+os_arch=$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
+
+echo "==> Creating dir..."
+mkdir -p "bin/$os_arch"
+cargo build --release
+cp "target/release/hpc-smith-waterman" "bin/$os_arch/"

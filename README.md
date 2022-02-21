@@ -4,7 +4,7 @@ A GPU-accelerated implementation of the Smith-Waterman algorithm for finding opt
 
 ## Usage
 
-> Note: If you want to build the program from source rather than use a prebuilt binary, substitute `cargo run --release --` for every occurrence of `hpc-smith-waterman` in the following commands.
+> Note: If you want to build the program from source rather than use a prebuilt binary, substitute `cargo run --release --` for every occurrence of `hpc-smith-waterman` in the following commands. Prebuilt binaries for x86-64 Linux (using OpenCL ICD) and arm64 Darwin/macOS can be found in `bin`.
 
 The program includes two main modes: `run` and `bench`.
 
