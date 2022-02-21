@@ -71,6 +71,10 @@ struct Args {
     #[clap(short, long, default_value_t = 10_000)]
     number: usize,
 
+    /// How many times to repeat/cycle each sequence.
+    #[clap(short, long, default_value_t = 1)]
+    repeats: usize,
+
     /// Whether to benchmark the naive (CPU) engine.
     #[clap(long)]
     naive: bool,
@@ -125,7 +129,7 @@ fn main() {
 
     // Read a subset of the sequences from the downloaded dataset
     let file = File::open(args.path).expect("Could not open dataset (did you specify --path?)");
-    let mut reader = FastaReader::new(BufReader::new(file));
+    let mut reader = FastaReader::new(BufReader::new(file)).map(|x| x.cycle(args.repeats));
     let database = reader.next().unwrap();
     let queries = reader.take(args.number).collect();
 
