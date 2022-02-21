@@ -159,4 +159,4 @@ Giga-CUPS: 0.89
 Pairs: 5
 ```
 
-Observation: The GPU is good at crunching large matrices with lots of diagonal in parallel.
+Observation: The GPU is good at crunching large matrices with lots of diagonals in parallel.
