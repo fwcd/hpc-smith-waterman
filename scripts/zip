@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+cd "$(dirname $0)/.."
+
+out_dir="zips"
+out_zip="$out_dir/hpc-smith-waterman.zip"
+
+echo "==> Zipping repo..."
+mkdir -p $out_dir
+git archive -o "$out_zip" HEAD
+
+echo "==> Zipped to $out_zip"
